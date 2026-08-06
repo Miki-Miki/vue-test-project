@@ -1,0 +1,23 @@
+// TSConfig for Jest test files, kept separate from tsconfig.app.json so that
+// the `jest` global types don't leak into the app build's type-checking.
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["src/**/__tests__/**/*", "src/test/**/*"],
+  "compilerOptions": {
+    // Jest's global types (`jest`, `describe`, `it`, `expect`, `afterEach`, ...)
+    // plus Node globals used in setup/mocks.
+    "types": ["jest", "node"],
+
+    // Path mapping for cleaner imports, matching tsconfig.app.json.
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
+    // Type-checking only; Jest itself transforms these files via babel-jest.
+    "noEmit": true,
+
+    // `vue-tsc --build` produces a .tsbuildinfo file for incremental type-checking.
+    // Specified here to keep it out of the root directory.
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.test.tsbuildinfo"
+  }
+}
