@@ -1,0 +1,218 @@
+/**
+ * Design Tokens — variables.css
+ *
+ * Single source of truth for all design tokens in this project.
+ * Import this file in main.css before any other stylesheets.
+ * All components should reference these variables rather than hard-coded values.
+ *
+ * Dark mode: applied via `.dark` class on <html> (manual toggle)
+ * and also via `@media (prefers-color-scheme: dark)` (system preference).
+ * Manual toggle takes precedence — add `data-theme="light"` on <html> to
+ * force light mode regardless of system preference.
+ */
+
+/* ─────────────────────────────────────────────────────────────
+   Static tokens — never change between themes
+   ───────────────────────────────────────────────────────────── */
+:root {
+  /* ─── Accent ──────────────────────────────────────────────── */
+  --accent: #4f46e5; /* Primary interactive color (indigo) */
+  --accent-dark: #4338ca; /* Hover/pressed state */
+  --accent-subtle: #ede9fe; /* Light: selected row backgrounds */
+  --accent-subtle-dark: #2e1065; /* Dark: selected row backgrounds */
+  --accent-muted: #c4b5fd; /* Borders in accent context */
+
+  /* ─── Spacing ─────────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  /* ─── Typography ──────────────────────────────────────────── */
+  --font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-md: 14px;
+
+  /* ─── Border Radius ───────────────────────────────────────── */
+  --radius-none: 0px;
+  --radius-sm: 2px; /* Default for inputs, buttons, grid cells */
+  --radius-md: 4px; /* Badges, small cards */
+  --radius-lg: 6px; /* Filter tabs container, modals */
+
+  /* ─── AG Grid static ──────────────────────────────────────── */
+  --ag-spacing: 6px;
+  --ag-border-radius: 2px;
+  --ag-row-height: 36px;
+  --ag-header-height: 36px;
+  --ag-font-size: 13px;
+  --ag-font-family: var(--font-family);
+  --ag-accent-color: var(--accent);
+  --ag-cell-horizontal-padding: 10px;
+  --ag-card-shadow: none;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Light theme (default)
+   ───────────────────────────────────────────────────────────── */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  /* ─── Neutrals ──────────────────────────────────────────── */
+  --color-surface: #ffffff;
+  --color-surface-muted: #f9fafb;
+  --color-surface-hover: #f3f4f6;
+  --color-surface-active: #e5e7eb;
+
+  /* ─── Borders ───────────────────────────────────────────── */
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+
+  /* ─── Text ──────────────────────────────────────────────── */
+  --color-text: #111827;
+  --color-text-muted: #6b7280;
+  --color-text-subtle: #9ca3af;
+  --color-text-inverted: #ffffff;
+
+  /* ─── Status: Neutral ───────────────────────────────────── */
+  --status-neutral-bg: #f3f4f6;
+  --status-neutral-text: #374151;
+
+  /* ─── Status: Warning ───────────────────────────────────── */
+  --status-warning-bg: #fef3c7;
+  --status-warning-text: #92400e;
+
+  /* ─── Status: Info ──────────────────────────────────────── */
+  --status-info-bg: #dbeafe;
+  --status-info-text: #1e40af;
+
+  /* ─── Status: Success ───────────────────────────────────── */
+  --status-success-bg: #d1fae5;
+  --status-success-text: #065f46;
+
+  /* ─── Status: Danger ────────────────────────────────────── */
+  --status-danger-bg: #fee2e2;
+  --status-danger-text: #991b1b;
+
+  /* ─── Accent contextual ─────────────────────────────────── */
+  --accent-subtle-bg: #ede9fe;
+
+  /* ─── AG Grid theme overrides ───────────────────────────── */
+  --ag-background-color: var(--color-surface);
+  --ag-foreground-color: var(--color-text);
+  --ag-border-color: var(--color-border);
+  --ag-header-background-color: var(--color-surface-muted);
+  --ag-row-hover-color: var(--color-surface-hover);
+  --ag-selected-row-background-color: var(--accent-subtle-bg);
+  --ag-popup-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --ag-header-column-separator-color: var(--color-border);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Dark theme — applied by .dark class on <html> (manual toggle)
+   ───────────────────────────────────────────────────────────── */
+.dark,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* ─── Neutrals ──────────────────────────────────────────── */
+  --color-surface: #111827;
+  --color-surface-muted: #1f2937;
+  --color-surface-hover: #374151;
+  --color-surface-active: #4b5563;
+
+  /* ─── Borders ───────────────────────────────────────────── */
+  --color-border: #374151;
+  --color-border-strong: #4b5563;
+
+  /* ─── Text ──────────────────────────────────────────────── */
+  --color-text: #f9fafb;
+  --color-text-muted: #9ca3af;
+  --color-text-subtle: #6b7280;
+  --color-text-inverted: #111827;
+
+  /* ─── Status: Neutral ───────────────────────────────────── */
+  --status-neutral-bg: #374151;
+  --status-neutral-text: #d1d5db;
+
+  /* ─── Status: Warning ───────────────────────────────────── */
+  --status-warning-bg: #451a03;
+  --status-warning-text: #fcd34d;
+
+  /* ─── Status: Info ──────────────────────────────────────── */
+  --status-info-bg: #1e3a5f;
+  --status-info-text: #93c5fd;
+
+  /* ─── Status: Success ───────────────────────────────────── */
+  --status-success-bg: #064e3b;
+  --status-success-text: #6ee7b7;
+
+  /* ─── Status: Danger ────────────────────────────────────── */
+  --status-danger-bg: #450a0a;
+  --status-danger-text: #fca5a5;
+
+  /* ─── Accent contextual ─────────────────────────────────── */
+  --accent-subtle-bg: #2e1065;
+
+  /* ─── AG Grid theme overrides ───────────────────────────── */
+  --ag-background-color: var(--color-surface);
+  --ag-foreground-color: var(--color-text);
+  --ag-border-color: var(--color-border);
+  --ag-header-background-color: var(--color-surface-muted);
+  --ag-row-hover-color: var(--color-surface-hover);
+  --ag-selected-row-background-color: var(--accent-subtle-bg);
+  --ag-popup-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --ag-header-column-separator-color: var(--color-border);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   System preference fallback (no manual toggle set)
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --color-surface: #111827;
+    --color-surface-muted: #1f2937;
+    --color-surface-hover: #374151;
+    --color-surface-active: #4b5563;
+
+    --color-border: #374151;
+    --color-border-strong: #4b5563;
+
+    --color-text: #f9fafb;
+    --color-text-muted: #9ca3af;
+    --color-text-subtle: #6b7280;
+    --color-text-inverted: #111827;
+
+    --status-neutral-bg: #374151;
+    --status-neutral-text: #d1d5db;
+
+    --status-warning-bg: #451a03;
+    --status-warning-text: #fcd34d;
+
+    --status-info-bg: #1e3a5f;
+    --status-info-text: #93c5fd;
+
+    --status-success-bg: #064e3b;
+    --status-success-text: #6ee7b7;
+
+    --status-danger-bg: #450a0a;
+    --status-danger-text: #fca5a5;
+
+    --accent-subtle-bg: #2e1065;
+
+    --ag-background-color: var(--color-surface);
+    --ag-foreground-color: var(--color-text);
+    --ag-border-color: var(--color-border);
+    --ag-header-background-color: var(--color-surface-muted);
+    --ag-row-hover-color: var(--color-surface-hover);
+    --ag-selected-row-background-color: var(--accent-subtle-bg);
+    --ag-popup-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --ag-header-column-separator-color: var(--color-border);
+  }
+}
