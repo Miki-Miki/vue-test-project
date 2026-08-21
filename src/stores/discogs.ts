@@ -31,11 +31,16 @@ export interface DiscogsPagination {
 export const useDiscogsStore = defineStore('discogs', () => {
   const results = ref<DiscogsResult[]>([])
   const pagination = ref<DiscogsPagination | null>(null)
+  const lastQuery = ref('')
 
   function setResults(data: { results: DiscogsResult[]; pagination: DiscogsPagination }) {
     results.value = data.results ?? []
     pagination.value = data.pagination ?? null
   }
 
-  return { results, pagination, setResults }
+  function setQuery(query: string) {
+    lastQuery.value = query
+  }
+
+  return { results, pagination, lastQuery, setResults, setQuery }
 })

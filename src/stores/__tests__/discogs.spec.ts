@@ -20,6 +20,13 @@ describe('useDiscogsStore', () => {
     const store = useDiscogsStore()
     expect(store.results).toEqual([])
     expect(store.pagination).toBeNull()
+    expect(store.lastQuery).toBe('')
+  })
+
+  it('setQuery stores the last submitted search query', () => {
+    const store = useDiscogsStore()
+    store.setQuery('nirvana')
+    expect(store.lastQuery).toBe('nirvana')
   })
 
   it('setResults stores results and pagination', () => {

@@ -21,3 +21,21 @@ Before touching Discogs search, auth, or the results grid — `src/views/SearchV
 ## Writing tests
 
 Before writing or generating new unit tests, or extending existing ones under any `__tests__/` directory, read [docs/testing-conventions.md](docs/testing-conventions.md) first. It covers where to mock (and where not to), which failure/edge paths must be paired with happy-path tests, how to control non-determinism like `Date.now()`, and which existing spec files are strong templates to copy vs. which ones not to imitate.
+
+## Claude Code configuration (`.claude/`)
+
+```
+.claude/
+├── settings.json           # team-shared config (permissions, MCP servers) — committed
+├── settings.local.json     # personal/machine overrides — gitignored, do not rely on it for team behavior
+├── agents/                 # subagents: focused, tool-scoped workers for specific jobs
+│   └── ui-designer.md      # turns a submitted UI screenshot into Vue components matching the design system
+└── skills/                 # skills: on-demand instructions Claude loads only when relevant/invoked
+    └── ui-from-screenshot/
+        ├── SKILL.md        # entry point — kept short; delegates implementation to the ui-designer agent
+        └── reference/      # deeper reference material as it accumulates (empty until needed)
+```
+
+- **`agents/`** vs **`skills/`**: a skill is *when to do something* (auto-loaded by its `description`, or invoked as `/skill-name`); an agent is *who does it* (a subagent with its own tool access and context window). The `ui-from-screenshot` skill is the entry point a request matches against; it delegates the actual component-writing work to the `ui-designer` agent.
+- Keep `src/CLAUDE.md` for design rules that must apply to *every* edit under `src/` (tokens, spacing, AG Grid theming). Move anything that's reference material rather than a hard rule — e.g. exhaustive screenshot-to-component mappings — into `.claude/skills/ui-from-screenshot/reference/` instead of growing `src/CLAUDE.md` further; skill bodies only load into context when used, CLAUDE.md files load on every relevant turn.
+- Follow the same `docs/*.md`-linked-from-CLAUDE.md pattern already used for `docs/discogs-api.md` and `docs/testing-conventions.md` when adding new project-wide reference docs that aren't tied to a specific skill.

@@ -25,6 +25,7 @@ async function search() {
 
     if (response.ok) {
       store.setResults(data)
+      store.setQuery(query.value)
       historyStore.addEntry(query.value, data)
     } else {
       error.value = `HTTP ${response.status}: ${response.statusText}`

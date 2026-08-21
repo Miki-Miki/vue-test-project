@@ -55,12 +55,25 @@ describe('GridView', () => {
   })
 
   it('passes rowData and columnDefs to the grid', () => {
-    useDiscogsStore().setResults({ results, pagination: { per_page: 2, pages: 1, page: 1, items: 2 } })
+    useDiscogsStore().setResults({
+      results,
+      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
+    })
     const wrapper = mountGridView()
 
     const grid = wrapper.findComponent(AgGridVueStub)
     expect(grid.exists()).toBe(true)
     expect(grid.props('rowData')).toEqual(results)
+  })
+
+  it('ranks rowData by keyword relevance ahead of "want" when a query is active', () => {
+    const store = useDiscogsStore()
+    store.setResults({ results, pagination: { per_page: 2, pages: 1, page: 1, items: 2 } })
+    store.setQuery('the wall')
+    const wrapper = mountGridView()
+
+    const grid = wrapper.findComponent(AgGridVueStub)
+    expect((grid.props('rowData') as DiscogsResult[]).map((r) => r.id)).toEqual([2, 1])
     expect((grid.props('columnDefs') as ColDef[]).map((c) => c.field ?? c.headerName)).toEqual([
       'title',
       'type',
@@ -73,30 +86,44 @@ describe('GridView', () => {
   })
 
   it('joins array values via the genre/style valueFormatter', () => {
-    useDiscogsStore().setResults({ results, pagination: { per_page: 2, pages: 1, page: 1, items: 2 } })
+    useDiscogsStore().setResults({
+      results,
+      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
+    })
     const wrapper = mountGridView()
-    const colDefs = wrapper.findComponent(AgGridVueStub).props('columnDefs') as ColDef<DiscogsResult>[]
+    const colDefs = wrapper
+      .findComponent(AgGridVueStub)
+      .props('columnDefs') as ColDef<DiscogsResult>[]
     const genreCol = colDefs.find((c) => c.field === 'genre')!
 
     const formatter = genreCol.valueFormatter as ValueFormatterFunc<DiscogsResult>
-    expect(formatter({ value: ['Rock', 'Non-Music'] } as ValueFormatterParams)).toBe('Rock, Non-Music')
+    expect(formatter({ value: ['Rock', 'Non-Music'] } as ValueFormatterParams)).toBe(
+      'Rock, Non-Music',
+    )
     expect(formatter({ value: undefined } as unknown as ValueFormatterParams)).toBe('')
   })
 
   it("reads community.want via the hidden Want column's valueGetter", () => {
-    useDiscogsStore().setResults({ results, pagination: { per_page: 2, pages: 1, page: 1, items: 2 } })
+    useDiscogsStore().setResults({
+      results,
+      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
+    })
     const wrapper = mountGridView()
-    const colDefs = wrapper.findComponent(AgGridVueStub).props('columnDefs') as ColDef<DiscogsResult>[]
+    const colDefs = wrapper
+      .findComponent(AgGridVueStub)
+      .props('columnDefs') as ColDef<DiscogsResult>[]
     const wantCol = colDefs.find((c) => c.headerName === 'Want')!
 
-    expect(wantCol.hide).toBe(true)
     const getter = wantCol.valueGetter as ValueGetterFunc<DiscogsResult>
     expect(getter({ data: results[0] } as ValueGetterParams<DiscogsResult>)).toBe(500)
     expect(getter({ data: results[1] } as ValueGetterParams<DiscogsResult>)).toBeUndefined()
   })
 
   it('selects a row on row-clicked and shows its detail panel, deselecting on a second click', async () => {
-    useDiscogsStore().setResults({ results, pagination: { per_page: 2, pages: 1, page: 1, items: 2 } })
+    useDiscogsStore().setResults({
+      results,
+      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
+    })
     const wrapper = mountGridView()
     expect(wrapper.findComponent({ name: 'DiscogsDetailPanel' }).exists()).toBe(false)
 

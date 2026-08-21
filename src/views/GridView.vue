@@ -10,12 +10,13 @@ import type {
 import { AgGridVue } from 'ag-grid-vue3'
 import { useDiscogsStore } from '@/stores/discogs'
 import type { DiscogsResult } from '@/stores/discogs'
+import { rankResults } from '@/utils/relevance'
 import DiscogsDetailPanel from '@/components/DiscogsDetailPanel.vue'
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
 const store = useDiscogsStore()
-const rowData = computed(() => store.results)
+const rowData = computed(() => rankResults(store.lastQuery, store.results))
 const selectedRow = ref<DiscogsResult | null>(null)
 
 const joinArray = (params: ValueFormatterParams) =>
@@ -31,8 +32,6 @@ const colDefs: ColDef<DiscogsResult>[] = [
   {
     headerName: 'Want',
     valueGetter: (params: ValueGetterParams<DiscogsResult>) => params.data?.community?.want,
-    sort: 'desc',
-    hide: true,
   },
 ]
 
