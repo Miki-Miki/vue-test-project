@@ -11,7 +11,7 @@ import { AgGridVue } from 'ag-grid-vue3'
 import { useDiscogsStore } from '@/stores/discogs'
 import type { DiscogsResult } from '@/stores/discogs'
 import { rankResults } from '@/utils/relevance'
-import DiscogsDetailPanel from '@/components/DiscogsDetailPanel.vue'
+import DetailPanel from '@/components/DetailPanel/DetailPanel.vue'
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
@@ -42,9 +42,9 @@ function onRowClicked(event: RowClickedEvent<DiscogsResult>) {
 
 <template>
   <div class="grid-view">
-    <p v-if="rowData.length === 0" class="empty">Run a search to populate the grid.</p>
+    <p v-if="rowData.length === 0" class="grid-view-empty">Run a search to populate the grid.</p>
     <template v-else>
-      <div class="grid-wrapper">
+      <div class="grid-view-wrapper">
         <AgGridVue
           :rowData="rowData"
           :columnDefs="colDefs"
@@ -52,7 +52,7 @@ function onRowClicked(event: RowClickedEvent<DiscogsResult>) {
           @row-clicked="onRowClicked"
         />
       </div>
-      <DiscogsDetailPanel
+      <DetailPanel
         v-if="selectedRow"
         :result="selectedRow"
         @close="selectedRow = null"
@@ -61,21 +61,4 @@ function onRowClicked(event: RowClickedEvent<DiscogsResult>) {
   </div>
 </template>
 
-<style scoped>
-.grid-view {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.grid-wrapper {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.empty {
-  padding: 2rem;
-}
-</style>
+<style scoped src="./GridView.scss" lang="scss"></style>

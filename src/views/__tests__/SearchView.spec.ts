@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
-import SearchView from '@/views/SearchView.vue'
+import SearchView from '@/views/SearchView/SearchView.vue'
 import { useDiscogsStore } from '@/stores/discogs'
 import type { DiscogsResult } from '@/stores/discogs'
 
@@ -28,14 +28,14 @@ describe('SearchView', () => {
   it('shows the auth prompt when unauthenticated', () => {
     mockAuthenticated.value = false
     const wrapper = mount(SearchView)
-    expect(wrapper.findComponent({ name: 'DiscogsAuthPrompt' }).exists()).toBe(true)
-    expect(wrapper.find('.results-area').exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'AuthPrompt' }).exists()).toBe(true)
+    expect(wrapper.find('.search-view-results').exists()).toBe(false)
   })
 
   it('shows a placeholder when authenticated with no results', () => {
     const wrapper = mount(SearchView)
-    expect(wrapper.findComponent({ name: 'DiscogsAuthPrompt' }).exists()).toBe(false)
-    expect(wrapper.find('.placeholder').text()).toBe('Search for artists, releases, labels…')
+    expect(wrapper.findComponent({ name: 'AuthPrompt' }).exists()).toBe(false)
+    expect(wrapper.find('.search-view-results-placeholder').text()).toBe('Search for artists, releases, labels…')
     expect(wrapper.find('pre').exists()).toBe(false)
   })
 
@@ -46,7 +46,7 @@ describe('SearchView', () => {
     })
 
     const wrapper = mount(SearchView)
-    expect(wrapper.find('.placeholder').exists()).toBe(false)
+    expect(wrapper.find('.search-view-results-placeholder').exists()).toBe(false)
     expect(wrapper.find('pre').text()).toBe(JSON.stringify([result], null, 2))
   })
 })

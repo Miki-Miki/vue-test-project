@@ -45,9 +45,9 @@ Prefer tag/role/text-content queries (`find('button')`, text search) over CSS cl
 These files are strong reference templates — copy their patterns rather than the weaker ones below:
 
 - `src/components/__tests__/SearchBar.spec.ts` — async store-integrated component, every branch of the request lifecycle (empty-guard, loading, success, HTTP error, thrown exception) against real Pinia state.
-- `src/components/__tests__/DiscogsDetailPanel.spec.ts` — pure prop-driven component, no mocking needed, all `v-if`/`??`/`?.` branches covered.
+- `src/components/__tests__/DetailPanel.spec.ts` — pure prop-driven component, no mocking needed, all `v-if`/`??`/`?.` branches covered.
 - `src/views/__tests__/GridView.spec.ts` — AG Grid stubbed at the right altitude, column formatter/getter functions invoked directly.
 - `src/stores/__tests__/searchHistory.spec.ts` — real localStorage round-trip, cross-store side effects, sequential `Date.now` mock.
 - `src/composables/__tests__/useDiscogsAuth.spec.ts` — `fetch` mocked at the network boundary, module state reset per test via `jest.resetModules()`.
 
-Don't use `src/components/__tests__/HelloWorld.spec.ts`, `TheWelcome.spec.ts`, or `DiscogsAuthPrompt.spec.ts` as thoroughness templates — they're thin even relative to their small surface. If `HelloWorld.vue`/`TheWelcome.vue` turn out to be unused scaffold leftovers rather than real app UI, prefer deleting them (and their tests) over investing in more coverage.
+Don't use `src/components/__tests__/HelloWorld.spec.ts`, `TheWelcome.spec.ts`, or `AuthPrompt.spec.ts` as thoroughness templates — they're thin even relative to their small surface. If `HelloWorld.vue`/`TheWelcome.vue` turn out to be unused scaffold leftovers rather than real app UI, prefer deleting them (and their tests) over investing in more coverage.

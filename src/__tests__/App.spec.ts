@@ -28,7 +28,7 @@ async function mountApp() {
 describe('App', () => {
   it('renders nav links to Search and Grid, and the matched route', async () => {
     const { wrapper, router } = await mountApp()
-    const links = wrapper.findAll('.nav-links a')
+    const links = wrapper.findAll('.app-nav-links a')
     expect(links.map((l) => l.text())).toEqual(['Search', 'Grid'])
     expect(wrapper.find('.search-page').exists()).toBe(true)
 
@@ -39,13 +39,13 @@ describe('App', () => {
 
   it('defaults to light mode when there is no data-theme attribute and the system prefers light', async () => {
     const { wrapper } = await mountApp()
-    expect(wrapper.find('.theme-toggle').attributes('aria-label')).toBe('Switch to dark mode')
+    expect(wrapper.find('.app-nav-theme-toggle').attributes('aria-label')).toBe('Switch to dark mode')
   })
 
   it('initialises as dark when <html data-theme="dark"> is already set', async () => {
     document.documentElement.setAttribute('data-theme', 'dark')
     const { wrapper } = await mountApp()
-    expect(wrapper.find('.theme-toggle').attributes('aria-label')).toBe('Switch to light mode')
+    expect(wrapper.find('.app-nav-theme-toggle').attributes('aria-label')).toBe('Switch to light mode')
   })
 
   it('initialises as dark when the system prefers dark and no explicit theme is set', async () => {
@@ -53,14 +53,14 @@ describe('App', () => {
     window.matchMedia = jest.fn().mockReturnValue({ matches: true })
 
     const { wrapper } = await mountApp()
-    expect(wrapper.find('.theme-toggle').attributes('aria-label')).toBe('Switch to light mode')
+    expect(wrapper.find('.app-nav-theme-toggle').attributes('aria-label')).toBe('Switch to light mode')
 
     window.matchMedia = matchMedia
   })
 
   it('toggles the theme and updates the data-theme attribute + aria-label on click', async () => {
     const { wrapper } = await mountApp()
-    const button = wrapper.find('.theme-toggle')
+    const button = wrapper.find('.app-nav-theme-toggle')
     expect(button.attributes('aria-label')).toBe('Switch to dark mode')
 
     await button.trigger('click')

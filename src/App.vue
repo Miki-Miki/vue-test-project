@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
-import SearchHistorySidebar from '@/components/SearchHistorySidebar.vue'
-import SearchBar from '@/components/SearchBar.vue'
+import SearchHistorySidebar from '@/components/SearchHistorySidebar/SearchHistorySidebar.vue'
+import SearchBar from '@/components/SearchBar/SearchBar.vue'
 
 const isDark = ref(false)
 
@@ -20,13 +20,13 @@ function toggleTheme() {
 </script>
 
 <template>
-  <nav>
-    <div class="nav-links">
-      <RouterLink to="/">Search</RouterLink>
-      <RouterLink to="/grid">Grid</RouterLink>
+  <nav class="app-nav">
+    <div class="app-nav-links">
+      <RouterLink to="/" class="app-nav-links-link">Search</RouterLink>
+      <RouterLink to="/grid" class="app-nav-links-link">Grid</RouterLink>
     </div>
     <button
-      class="theme-toggle"
+      class="app-nav-theme-toggle"
       :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
       @click="toggleTheme"
     >
@@ -72,62 +72,4 @@ function toggleTheme() {
   </div>
 </template>
 
-<style scoped>
-.app-body {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-nav {
-  display: flex;
-  flex-shrink: 0;
-  height: 48px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1rem;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.nav-links a {
-  font-size: var(--font-size-md);
-  font-weight: 500;
-  color: var(--color-text-muted);
-  text-decoration: none;
-  transition: color 150ms;
-}
-
-.nav-links a:hover,
-.nav-links a.router-link-active {
-  color: var(--color-text);
-}
-
-.theme-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition:
-    background 150ms,
-    color 150ms;
-}
-
-.theme-toggle:hover {
-  background: var(--color-surface-hover);
-  color: var(--color-text);
-}
-</style>
+<style scoped src="./App.scss" lang="scss"></style>

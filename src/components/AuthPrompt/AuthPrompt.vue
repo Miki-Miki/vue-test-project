@@ -11,14 +11,4 @@ const { login } = useDiscogsAuth()
   </div>
 </template>
 
-<style scoped>
-.auth-prompt {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  gap: 1rem;
-  color: var(--color-text-muted);
-}
-</style>
+<style scoped src="./AuthPrompt.scss" lang="scss"></style>

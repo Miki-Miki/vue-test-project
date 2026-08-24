@@ -12,7 +12,7 @@ Vue 3 + Vite + TypeScript SPA for searching the Discogs music database: a chat-s
 
 ## Styling / UI conventions
 
-Design-system rules (spacing, colors, dark theme, AG Grid theming, component recipes) live in [src/CLAUDE.md](src/CLAUDE.md) and load automatically whenever you work under `src/`.
+[src/CLAUDE.md](src/CLAUDE.md) is the entry point and loads automatically whenever you work under `src/`. It routes to two places: [.claude/rules/styling-structure.md](.claude/rules/styling-structure.md) (selector naming, ITCSS layout, component folders — always in effect) and the `styling-design-system` skill (tokens, colors, dark theme, component recipes — loaded on demand for actual visual/design decisions).
 
 ## Discogs API feature work
 
@@ -28,14 +28,19 @@ Before writing or generating new unit tests, or extending existing ones under an
 .claude/
 ├── settings.json           # team-shared config (permissions, MCP servers) — committed
 ├── settings.local.json     # personal/machine overrides — gitignored, do not rely on it for team behavior
+├── rules/                  # always-loaded structural rules, injected alongside CLAUDE.md
+│   └── styling-structure.md # selector naming, ITCSS layout, component-folder convention
 ├── agents/                 # subagents: focused, tool-scoped workers for specific jobs
 │   └── ui-designer.md      # turns a submitted UI screenshot into Vue components matching the design system
 └── skills/                 # skills: on-demand instructions Claude loads only when relevant/invoked
+    ├── styling-design-system/
+    │   └── SKILL.md        # design tokens, colors, typography, dark theme, component recipes (badges, buttons, AG Grid)
     └── ui-from-screenshot/
         ├── SKILL.md        # entry point — kept short; delegates implementation to the ui-designer agent
         └── reference/      # deeper reference material as it accumulates (empty until needed)
 ```
 
+- **`rules/`** vs **`skills/`**: both are project instructions, but `rules/*.md` files are injected every relevant turn just like CLAUDE.md — reserve them for things that must hold on *every* edit in their scope (e.g. selector naming must never be violated). `skills/*/SKILL.md` only load when their `description` matches the task (or on explicit invocation) — use them for reference material that's only needed for specific kinds of changes (e.g. design tokens are irrelevant to a purely structural rename).
 - **`agents/`** vs **`skills/`**: a skill is *when to do something* (auto-loaded by its `description`, or invoked as `/skill-name`); an agent is *who does it* (a subagent with its own tool access and context window). The `ui-from-screenshot` skill is the entry point a request matches against; it delegates the actual component-writing work to the `ui-designer` agent.
-- Keep `src/CLAUDE.md` for design rules that must apply to *every* edit under `src/` (tokens, spacing, AG Grid theming). Move anything that's reference material rather than a hard rule — e.g. exhaustive screenshot-to-component mappings — into `.claude/skills/ui-from-screenshot/reference/` instead of growing `src/CLAUDE.md` further; skill bodies only load into context when used, CLAUDE.md files load on every relevant turn.
+- Keep `src/CLAUDE.md` itself thin — a router to the always-loaded rule(s) and relevant skill(s), not a place to accumulate reference content directly. Move exhaustive reference material (design tokens, screenshot-to-component mappings, etc.) into a skill instead of growing `src/CLAUDE.md` or a rules file further; skill bodies only load into context when used, rules/CLAUDE.md files load on every relevant turn.
 - Follow the same `docs/*.md`-linked-from-CLAUDE.md pattern already used for `docs/discogs-api.md` and `docs/testing-conventions.md` when adding new project-wide reference docs that aren't tied to a specific skill.

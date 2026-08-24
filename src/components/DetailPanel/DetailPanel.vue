@@ -36,35 +36,40 @@ const discogsUrl = computed(() =>
 </script>
 
 <template>
-  <Transition name="detail-slide" appear>
+  <Transition name="detail-panel-slide" appear>
     <aside class="detail-panel" role="dialog" aria-label="Release detail">
-      <header class="detail-header">
-        <span class="detail-header__label">Release Detail</span>
-        <button type="button" class="detail-close" aria-label="Close" @click="emit('close')">✕</button>
+      <header class="detail-panel-header">
+        <span class="detail-panel-header-label">Release Detail</span>
+        <button type="button" class="detail-panel-close" aria-label="Close" @click="emit('close')">✕</button>
       </header>
 
-      <div class="detail-body">
-        <div class="detail-thumb">
-          <img v-if="result.thumb" :src="result.thumb" :alt="result.title" />
-          <div v-else class="no-image">♫</div>
+      <div class="detail-panel-body">
+        <div class="detail-panel-thumb">
+          <img
+            v-if="result.thumb"
+            class="detail-panel-thumb-image"
+            :src="result.thumb"
+            :alt="result.title"
+          />
+          <div v-else class="detail-panel-thumb-empty">♫</div>
         </div>
 
-        <h2 class="detail-title">{{ releaseTitle }}</h2>
-        <p v-if="artist" class="detail-artist">{{ artist }}</p>
+        <h2 class="detail-panel-title">{{ releaseTitle }}</h2>
+        <p v-if="artist" class="detail-panel-artist">{{ artist }}</p>
 
-        <div v-if="tags.length" class="detail-tags">
-          <span v-for="tag in tags" :key="tag" class="tag">{{ tag }}</span>
+        <div v-if="tags.length" class="detail-panel-tags">
+          <span v-for="tag in tags" :key="tag" class="detail-panel-tags-tag">{{ tag }}</span>
         </div>
 
-        <dl class="detail-fields">
-          <div v-for="field in fields" :key="field.label" class="detail-field">
-            <dt>{{ field.label }}</dt>
-            <dd>{{ field.value }}</dd>
+        <dl class="detail-panel-fields">
+          <div v-for="field in fields" :key="field.label" class="detail-panel-fields-field">
+            <dt class="detail-panel-fields-field-label">{{ field.label }}</dt>
+            <dd class="detail-panel-fields-field-value">{{ field.value }}</dd>
           </div>
         </dl>
       </div>
 
-      <footer class="detail-footer">
+      <footer class="detail-panel-footer">
         <a :href="discogsUrl" target="_blank" rel="noopener noreferrer" class="btn">View on Discogs</a>
         <button type="button" class="btn btn--primary">Add to collection</button>
       </footer>
@@ -72,4 +77,4 @@ const discogsUrl = computed(() =>
   </Transition>
 </template>
 
-<style scoped src="./DiscogsDetailPanel.css"></style>
+<style scoped src="./DetailPanel.scss" lang="scss"></style>

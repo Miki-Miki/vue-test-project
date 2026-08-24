@@ -1,8 +1,8 @@
 /**
- * Design Tokens — variables.css
+ * Design Tokens — _variables.scss
  *
  * Single source of truth for all design tokens in this project.
- * Import this file in main.css before any other stylesheets.
+ * Forwarded from main.scss before any other stylesheet layer.
  * All components should reference these variables rather than hard-coded values.
  *
  * Dark mode: applied via `.dark` class on <html> (manual toggle)

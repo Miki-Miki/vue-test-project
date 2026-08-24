@@ -1,0 +1,40 @@
+// Components layer — shared, reusable design-system recipes referenced by
+// name across multiple Vue components (e.g. .btn, .badge, .filter-tabs).
+// These are NOT a single component's structural markup, so they don't follow
+// the &-child-name selector-naming standard — see .claude/rules/styling-structure.md.
+// They live here rather than inside any one component's scoped stylesheet
+// because Vue's `scoped` attribute would otherwise wall them off from every
+// other component that also uses the class.
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 150ms;
+
+  &:hover {
+    background: var(--color-surface-muted);
+  }
+
+  &--primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--color-text-inverted);
+
+    &:hover {
+      background: var(--accent-dark);
+      border-color: var(--accent-dark);
+    }
+  }
+}

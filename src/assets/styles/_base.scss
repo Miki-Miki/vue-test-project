@@ -1,0 +1,34 @@
+// Base layer — bare element defaults. No classes; provider-agnostic.
+
+body {
+  min-height: 100vh;
+  color: var(--color-text);
+  background: var(--color-surface);
+  transition:
+    color 150ms,
+    background-color 150ms;
+  line-height: 1.6;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}

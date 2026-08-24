@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount, flushPromises } from '@vue/test-utils'
-import SearchBar from '@/components/SearchBar.vue'
+import SearchBar from '@/components/SearchBar/SearchBar.vue'
 import { useDiscogsStore } from '@/stores/discogs'
 import { useSearchHistoryStore } from '@/stores/searchHistory'
 
@@ -54,7 +54,7 @@ describe('SearchBar', () => {
     expect(useDiscogsStore().results).toEqual(data.results)
     expect(useDiscogsStore().lastQuery).toBe('nirvana')
     expect(useSearchHistoryStore().entries).toHaveLength(1)
-    expect(wrapper.find('.search-error').exists()).toBe(false)
+    expect(wrapper.find('.search-bar-error').exists()).toBe(false)
   })
 
   it('shows the loading label while a search is in flight', async () => {
@@ -84,7 +84,7 @@ describe('SearchBar', () => {
     await wrapper.find('button').trigger('click')
     await flushPromises()
 
-    expect(wrapper.find('.search-error').text()).toBe('HTTP 401: Unauthorized')
+    expect(wrapper.find('.search-bar-error').text()).toBe('HTTP 401: Unauthorized')
   })
 
   it('shows the exception message when fetch throws', async () => {
@@ -95,7 +95,7 @@ describe('SearchBar', () => {
     await wrapper.find('button').trigger('click')
     await flushPromises()
 
-    expect(wrapper.find('.search-error').text()).toBe('network down')
+    expect(wrapper.find('.search-bar-error').text()).toBe('network down')
   })
 
   it('triggers a search on Enter in the input', async () => {

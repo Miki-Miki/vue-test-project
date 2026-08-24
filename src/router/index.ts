@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import SearchView from '../views/SearchView.vue'
+import SearchView from '../views/SearchView/SearchView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,7 +12,7 @@ const router = createRouter({
     {
       path: '/grid',
       name: 'grid',
-      component: () => import('../views/GridView.vue'),
+      component: () => import('../views/GridView/GridView.vue'),
     },
   ],
 })

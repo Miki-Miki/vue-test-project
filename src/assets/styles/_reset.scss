@@ -1,0 +1,17 @@
+// Generic layer — CSS reset / normalize, box-sizing only.
+// No project-specific values here (colors, fonts, spacing tokens); see _variables.scss for those.
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
