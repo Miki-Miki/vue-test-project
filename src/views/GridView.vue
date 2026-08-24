@@ -52,7 +52,11 @@ function onRowClicked(event: RowClickedEvent<DiscogsResult>) {
           @row-clicked="onRowClicked"
         />
       </div>
-      <DiscogsDetailPanel v-if="selectedRow" :result="selectedRow" />
+      <DiscogsDetailPanel
+        v-if="selectedRow"
+        :result="selectedRow"
+        @close="selectedRow = null"
+      />
     </template>
   </div>
 </template>

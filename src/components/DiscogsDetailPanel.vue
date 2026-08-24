@@ -1,112 +1,75 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { DiscogsResult } from '@/stores/discogs'
 
-defineProps<{
+const props = defineProps<{
   result: DiscogsResult
 }>()
 
+const emit = defineEmits<{
+  close: []
+}>()
+
 const joinArray = (val?: string[]) => (val && val.length ? val.join(', ') : '—')
+
+const titleParts = computed(() => {
+  const [first, ...rest] = props.result.title.split(' - ')
+  return rest.length ? { artist: first, releaseTitle: rest.join(' - ') } : { artist: '', releaseTitle: first }
+})
+
+const artist = computed(() => titleParts.value.artist)
+const releaseTitle = computed(() => titleParts.value.releaseTitle)
+
+const tags = computed(() => [...(props.result.genre ?? []), ...(props.result.style ?? [])])
+
+const fields = computed(() => [
+  { label: 'Year', value: props.result.year ?? '—' },
+  { label: 'Format', value: joinArray(props.result.format) },
+  { label: 'Label', value: joinArray(props.result.label) },
+  { label: 'Catalog #', value: props.result.catno ?? '—' },
+  { label: 'Country', value: props.result.country ?? '—' },
+])
+
+const discogsUrl = computed(() =>
+  props.result.uri.startsWith('http') ? props.result.uri : `https://www.discogs.com${props.result.uri}`,
+)
 </script>
 
 <template>
-  <div class="detail-panel">
-    <div class="detail-thumb">
-      <img v-if="result.thumb" :src="result.thumb" :alt="result.title" />
-      <div v-else class="no-image">No image available</div>
-    </div>
+  <Transition name="detail-slide" appear>
+    <aside class="detail-panel" role="dialog" aria-label="Release detail">
+      <header class="detail-header">
+        <span class="detail-header__label">Release Detail</span>
+        <button type="button" class="detail-close" aria-label="Close" @click="emit('close')">✕</button>
+      </header>
 
-    <dl class="detail-fields">
-      <div class="detail-row">
-        <dt>Format</dt>
-        <dd>{{ joinArray(result.format) }}</dd>
+      <div class="detail-body">
+        <div class="detail-thumb">
+          <img v-if="result.thumb" :src="result.thumb" :alt="result.title" />
+          <div v-else class="no-image">♫</div>
+        </div>
+
+        <h2 class="detail-title">{{ releaseTitle }}</h2>
+        <p v-if="artist" class="detail-artist">{{ artist }}</p>
+
+        <div v-if="tags.length" class="detail-tags">
+          <span v-for="tag in tags" :key="tag" class="tag">{{ tag }}</span>
+        </div>
+
+        <dl class="detail-fields">
+          <div v-for="field in fields" :key="field.label" class="detail-field">
+            <dt>{{ field.label }}</dt>
+            <dd>{{ field.value }}</dd>
+          </div>
+        </dl>
       </div>
-      <div class="detail-row">
-        <dt>Label</dt>
-        <dd>{{ joinArray(result.label) }}</dd>
-      </div>
-      <div class="detail-row">
-        <dt>Cat No.</dt>
-        <dd>{{ result.catno ?? '—' }}</dd>
-      </div>
-      <div class="detail-row">
-        <dt>Want</dt>
-        <dd>{{ result.community?.want ?? '—' }}</dd>
-      </div>
-      <div class="detail-row">
-        <dt>Have</dt>
-        <dd>{{ result.community?.have ?? '—' }}</dd>
-      </div>
-    </dl>
-  </div>
+
+      <footer class="detail-footer">
+        <a :href="discogsUrl" target="_blank" rel="noopener noreferrer" class="btn">View on Discogs</a>
+        <button type="button" class="btn btn--primary">Add to collection</button>
+      </footer>
+    </aside>
+  </Transition>
 </template>
 
-<style scoped>
-.detail-panel {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  flex-shrink: 0;
-  border-top: 1px solid var(--color-border);
-}
-
-.detail-thumb {
-  flex-shrink: 0;
-  width: 90px;
-  height: 90px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.detail-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.no-image {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: 11px;
-  color: var(--color-text-muted);
-  border: 1px solid var(--color-border);
-}
-
-.detail-fields {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-}
-
-.detail-row {
-  display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-}
-
-dt {
-  flex-shrink: 0;
-  min-width: 60px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
-}
-
-dd {
-  margin: 0;
-  font-size: 13px;
-  color: var(--color-text);
-}
-</style>
+<style scoped src="./DiscogsDetailPanel.css"></style>

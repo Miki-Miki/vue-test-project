@@ -135,4 +135,19 @@ describe('GridView', () => {
     await wrapper.findComponent(AgGridVueStub).vm.$emit('row-clicked', { data: results[0] })
     expect(wrapper.findComponent({ name: 'DiscogsDetailPanel' }).exists()).toBe(false)
   })
+
+  it('deselects the row when the detail panel emits close', async () => {
+    useDiscogsStore().setResults({
+      results,
+      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
+    })
+    const wrapper = mountGridView()
+
+    await wrapper.findComponent(AgGridVueStub).vm.$emit('row-clicked', { data: results[0] })
+    const panel = wrapper.findComponent({ name: 'DiscogsDetailPanel' })
+    expect(panel.exists()).toBe(true)
+
+    await panel.vm.$emit('close')
+    expect(wrapper.findComponent({ name: 'DiscogsDetailPanel' }).exists()).toBe(false)
+  })
 })
