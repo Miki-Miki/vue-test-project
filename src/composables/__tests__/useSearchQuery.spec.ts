@@ -137,6 +137,49 @@ describe('useSearchQuery', () => {
     expect(loading.value).toBe(false)
   })
 
+  it('suggestions is empty for a plain track search', () => {
+    const { query, suggestions } = useSearchQuery()
+    query.value = 'nirvana'
+
+    expect(suggestions.value).toEqual([])
+  })
+
+  it('suggestions filters the genre list by the in-progress term', () => {
+    const { query, suggestions } = useSearchQuery()
+    query.value = '/genre ro'
+
+    expect(suggestions.value).toContain('Rock')
+    expect(suggestions.value.every((g) => g.toLowerCase().includes('ro'))).toBe(true)
+  })
+
+  it('suggestions returns the full genre list for a bare /genre command', () => {
+    const { query, suggestions } = useSearchQuery()
+    query.value = '/genre'
+
+    expect(suggestions.value.length).toBeGreaterThan(1)
+  })
+
+  it('suggestions filters the style list by the in-progress term', () => {
+    const { query, suggestions } = useSearchQuery()
+    query.value = '/style aci'
+
+    expect(suggestions.value).toContain('Acid')
+    expect(suggestions.value.every((s) => s.toLowerCase().includes('aci'))).toBe(true)
+  })
+
+  it('selectSuggestion runs a search using the current command mode', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue(
+      jsonResponse({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
+    )
+    const { query, selectSuggestion } = useSearchQuery()
+    query.value = '/genre ro'
+    await selectSuggestion('Rock')
+
+    expect(query.value).toBe('/genre Rock')
+    expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?genre=Rock&type=release')
+    expect(useDiscogsStore().lastSearchMode).toBe(SearchMode.Genre)
+  })
+
   it('reset clears query, loading, and error', () => {
     const state = useSearchQuery()
     state.query.value = 'nirvana'

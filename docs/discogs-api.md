@@ -79,6 +79,12 @@ The app's search bar (`src/composables/useSearchQuery.ts`) recognizes slash comm
 - **`src/api/discogs/`** is the only place that knows a Discogs URL or calls `fetch`: `search.ts` exports `searchTracks`/`searchByGenre`/`searchByStyle` and the `discogsSearchApi` mode→function map; `auth.ts` exports `fetchAuthStatus`/`login`; `client.ts` is the shared fetch/normalize helper both use.
 - **`src/composables/useSearchQuery.ts`** ties the two together: it parses the input, then calls `discogsSearchApi[mode](term)` — it never builds a URL itself, which is what keeps the search architecture agnostic of which API backs it.
 
+### Genre/style suggestions (no live endpoint)
+
+Discogs' `/database/search` doesn't return facets, and there is no endpoint that lists valid genre/style values — the taxonomy is a small, fixed, publicly documented set (15 genres, ~570 styles) maintained by Discogs' database guidelines and data dump. It's shipped as static data in `src/data/discogsTaxonomy.ts` (`DISCOGS_GENRES`, `DISCOGS_STYLES`) rather than fetched at runtime.
+
+`useSearchQuery.ts` exposes a `suggestions` computed that filters this taxonomy by whatever's typed after `/genre `/`/style `, and `SearchBar.vue` renders it as an autocomplete dropdown (arrow keys to navigate, Enter/click to select) so users pick a real value instead of free-typing one that may not exist. Selecting a suggestion goes through the existing `searchByCommand`/`discogsSearchApi` path — no new API wiring.
+
 ### Adding a new search command
 
 1. Add a new `SearchMode` value in `src/types/search.ts`.

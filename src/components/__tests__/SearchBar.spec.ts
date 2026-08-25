@@ -108,7 +108,7 @@ describe('SearchBar', () => {
 
     const wrapper = mount(SearchBar)
     await wrapper.find('input').setValue('nirvana')
-    await wrapper.find('input').trigger('keyup.enter')
+    await wrapper.find('input').trigger('keydown', { key: 'Enter' })
 
     expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?track=nirvana')
   })
@@ -165,5 +165,69 @@ describe('SearchBar', () => {
 
     expect(wrapper.find('input').element.value).toBe('/style "New Beat"')
     expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?style=New%20Beat&type=release')
+  })
+
+  it('shows a filtered genre dropdown once /genre is typed', async () => {
+    const wrapper = mount(SearchBar)
+    await wrapper.find('input').setValue('/genre ro')
+    await wrapper.find('input').trigger('input')
+
+    const items = wrapper.findAll('.search-bar-suggestions-item')
+    expect(items.length).toBeGreaterThan(0)
+    expect(items.map((item) => item.text())).toContain('Rock')
+  })
+
+  it('shows no dropdown for a plain track search', async () => {
+    const wrapper = mount(SearchBar)
+    await wrapper.find('input').setValue('nirvana')
+    await wrapper.find('input').trigger('input')
+
+    expect(wrapper.find('.search-bar-suggestions').exists()).toBe(false)
+  })
+
+  it('selects a highlighted suggestion via ArrowDown + Enter and runs the search', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue(
+      jsonResponse({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
+    )
+
+    const wrapper = mount(SearchBar)
+    await wrapper.find('input').setValue('/genre roc')
+    await wrapper.find('input').trigger('input')
+    await wrapper.find('input').trigger('keydown', { key: 'ArrowDown' })
+    await wrapper.find('input').trigger('keydown', { key: 'Enter' })
+    await flushPromises()
+
+    expect(wrapper.find('input').element.value).toBe('/genre Rock')
+    expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?genre=Rock&type=release')
+    expect(wrapper.find('.search-bar-suggestions').exists()).toBe(false)
+  })
+
+  it('selects a suggestion on mousedown and closes the dropdown', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue(
+      jsonResponse({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
+    )
+
+    const wrapper = mount(SearchBar)
+    await wrapper.find('input').setValue('/style aci')
+    await wrapper.find('input').trigger('input')
+
+    const item = wrapper.findAll('.search-bar-suggestions-item').find((el) => el.text() === 'Acid')
+    expect(item).toBeDefined()
+    await item!.trigger('mousedown')
+    await flushPromises()
+
+    expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?style=Acid&type=release')
+    expect(wrapper.find('.search-bar-suggestions').exists()).toBe(false)
+  })
+
+  it('closes the dropdown on Escape', async () => {
+    const wrapper = mount(SearchBar)
+    await wrapper.find('input').setValue('/genre ro')
+    await wrapper.find('input').trigger('input')
+    expect(wrapper.find('.search-bar-suggestions').exists()).toBe(true)
+
+    await wrapper.find('input').trigger('keydown', { key: 'Escape' })
+
+    expect(wrapper.find('.search-bar-suggestions').exists()).toBe(false)
   })
 })

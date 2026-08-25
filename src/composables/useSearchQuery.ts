@@ -1,13 +1,43 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { SearchMode } from '@/types/search'
 import { useDiscogsStore } from '@/stores/discogs'
 import { useSearchHistoryStore } from '@/stores/searchHistory'
 import { discogsSearchApi } from '@/api/discogs'
 import { parseSearchCommand, formatCommand, SEARCH_COMMANDS } from '@/utils/searchCommand'
+import { DISCOGS_GENRES, DISCOGS_STYLES } from '@/data/discogsTaxonomy'
+
+const SUGGESTION_LIMIT = 20
 
 const query = ref('')
 const loading = ref(false)
 const error = ref('')
+
+function taxonomyFor(mode: SearchMode): readonly string[] {
+  switch (mode) {
+    case SearchMode.Genre:
+      return DISCOGS_GENRES
+    case SearchMode.Style:
+      return DISCOGS_STYLES
+    default:
+      return []
+  }
+}
+
+/**
+ * Suggestions only appear once a full `/genre`/`/style` keyword has been
+ * typed (parseSearchCommand requires an exact keyword match) — this mirrors
+ * the search bar's existing command syntax rather than introducing a new one.
+ */
+const suggestions = computed(() => {
+  const parsed = parseSearchCommand(query.value)
+  const pool = taxonomyFor(parsed.mode)
+  if (!pool.length) return []
+
+  const needle = parsed.term.toLowerCase()
+  const matches = needle ? pool.filter((value) => value.toLowerCase().includes(needle)) : pool
+
+  return matches.slice(0, SUGGESTION_LIMIT)
+})
 
 function usageMessage(mode: SearchMode): string {
   const command = SEARCH_COMMANDS.find((c) => c.mode === mode)
@@ -51,6 +81,11 @@ async function searchByCommand(mode: SearchMode, value: string): Promise<void> {
   await search()
 }
 
+async function selectSuggestion(value: string): Promise<void> {
+  const parsed = parseSearchCommand(query.value)
+  await searchByCommand(parsed.mode, value)
+}
+
 function reset(): void {
   query.value = ''
   loading.value = false
@@ -58,5 +93,5 @@ function reset(): void {
 }
 
 export function useSearchQuery() {
-  return { query, loading, error, search, searchByCommand, reset }
+  return { query, loading, error, search, searchByCommand, suggestions, selectSuggestion, reset }
 }
