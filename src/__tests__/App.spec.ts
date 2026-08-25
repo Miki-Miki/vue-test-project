@@ -8,6 +8,7 @@ function createTestRouter() {
     routes: [
       { path: '/', name: 'search', component: { template: '<div class="search-page" />' } },
       { path: '/grid', name: 'grid', component: { template: '<div class="grid-page" />' } },
+      { path: '/tree', name: 'tree', component: { template: '<div class="tree-page" />' } },
     ],
   })
 }
@@ -26,10 +27,10 @@ async function mountApp() {
 }
 
 describe('App', () => {
-  it('renders nav links to Search and Grid, and the matched route', async () => {
+  it('renders nav links to Search, Grid, and Tree, and the matched route', async () => {
     const { wrapper, router } = await mountApp()
     const links = wrapper.findAll('.app-nav-links a')
-    expect(links.map((l) => l.text())).toEqual(['Search', 'Grid'])
+    expect(links.map((l) => l.text())).toEqual(['Search', 'Grid', 'Tree'])
     expect(wrapper.find('.search-page').exists()).toBe(true)
 
     await router.push('/grid')

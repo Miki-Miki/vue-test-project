@@ -9,6 +9,10 @@ function formatTime(ts: number): string {
   const d = new Date(ts)
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
+
+function lastSearch(session: (typeof historyStore.sessions)[number]) {
+  return session.searches[session.searches.length - 1]!
+}
 </script>
 
 <template>
@@ -38,35 +42,42 @@ function formatTime(ts: number): string {
     </div>
 
     <div v-if="!collapsed" class="search-history-sidebar-body">
-      <p v-if="historyStore.entries.length === 0" class="search-history-sidebar-body-empty">No searches yet</p>
+      <p v-if="historyStore.sessions.length === 0" class="search-history-sidebar-body-empty">No searches yet</p>
 
       <ul v-else class="search-history-sidebar-body-entries">
         <li
-          v-for="entry in historyStore.entries"
-          :key="entry.id"
+          v-for="session in historyStore.sessions"
+          :key="session.id"
           class="search-history-sidebar-body-entries-entry"
           :class="{
-            'search-history-sidebar-body-entries-entry-active': historyStore.activeEntryId === entry.id,
+            'search-history-sidebar-body-entries-entry-active':
+              historyStore.activeSessionId === session.id,
           }"
           role="button"
           tabindex="0"
-          @click="historyStore.setActiveEntry(entry.id)"
-          @keyup.enter="historyStore.setActiveEntry(entry.id)"
+          @click="historyStore.setActiveEntry(session.id)"
+          @keyup.enter="historyStore.setActiveEntry(session.id)"
         >
-          <span class="search-history-sidebar-body-entries-entry-query">{{ entry.query }}</span>
+          <span class="search-history-sidebar-body-entries-entry-query">{{
+            lastSearch(session).query
+          }}</span>
           <div class="search-history-sidebar-body-entries-entry-meta">
             <span class="search-history-sidebar-body-entries-entry-meta-count"
-              >{{ entry.results.length }} results</span
+              >{{ lastSearch(session).results.length }} results<template
+                v-if="session.searches.length > 1"
+              >
+                &middot; &times;{{ session.searches.length }} searches</template
+              ></span
             >
             <span class="search-history-sidebar-body-entries-entry-meta-time">{{
-              formatTime(entry.timestamp)
+              formatTime(session.timestamp)
             }}</span>
           </div>
         </li>
       </ul>
     </div>
 
-    <div v-if="!collapsed && historyStore.entries.length > 0" class="search-history-sidebar-footer">
+    <div v-if="!collapsed && historyStore.sessions.length > 0" class="search-history-sidebar-footer">
       <button class="search-history-sidebar-footer-clear-btn" @click="historyStore.clearHistory()">
         Clear history
       </button>

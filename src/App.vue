@@ -24,6 +24,7 @@ function toggleTheme() {
     <div class="app-nav-links">
       <RouterLink to="/" class="app-nav-links-link">Search</RouterLink>
       <RouterLink to="/grid" class="app-nav-links-link">Grid</RouterLink>
+      <RouterLink to="/tree" class="app-nav-links-link">Tree</RouterLink>
     </div>
     <button
       class="app-nav-theme-toggle"

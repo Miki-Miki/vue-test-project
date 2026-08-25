@@ -65,7 +65,11 @@ async function search(): Promise<void> {
       const historyStore = useSearchHistoryStore()
       store.setResults(response.data)
       store.setQuery(parsed.raw, parsed.mode)
-      historyStore.addEntry(parsed.raw, response.data)
+      if (window.location.pathname === '/tree') {
+        historyStore.appendSearch(parsed.raw, response.data)
+      } else {
+        historyStore.addEntry(parsed.raw, response.data)
+      }
     } else {
       error.value = `HTTP ${response.status}: ${response.statusText}`
     }

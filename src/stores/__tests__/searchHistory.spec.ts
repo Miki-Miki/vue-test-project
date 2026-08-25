@@ -28,34 +28,52 @@ describe('useSearchHistoryStore', () => {
 
   it('starts empty when nothing is in localStorage', () => {
     const store = useSearchHistoryStore()
-    expect(store.entries).toEqual([])
-    expect(store.activeEntryId).toBeNull()
+    expect(store.sessions).toEqual([])
+    expect(store.activeSessionId).toBeNull()
   })
 
-  it('restores entries from localStorage on init', () => {
-    const seeded = [{ id: 'abc', query: 'floyd', timestamp: 1, results: [], pagination: null }]
+  it('restores sessions from localStorage on init', () => {
+    const seeded = [
+      {
+        id: 'abc',
+        timestamp: 1,
+        searches: [{ id: 'abc', query: 'floyd', timestamp: 1, results: [], pagination: null }],
+      },
+    ]
     window.localStorage.setItem('discogs:search-history', JSON.stringify(seeded))
 
     const store = useSearchHistoryStore()
-    expect(store.entries).toEqual(seeded)
-    expect(store.activeEntryId).toBe('abc')
+    expect(store.sessions).toEqual(seeded)
+    expect(store.activeSessionId).toBe('abc')
   })
 
-  it('addEntry prepends a new entry, sets it active, and persists to localStorage', () => {
+  it('migrates legacy flat entries (pre-session shape) into single-search sessions', () => {
+    const legacy = [{ id: 'abc', query: 'floyd', timestamp: 1, results: [], pagination: null }]
+    window.localStorage.setItem('discogs:search-history', JSON.stringify(legacy))
+
+    const store = useSearchHistoryStore()
+    expect(store.sessions).toEqual([
+      { id: 'abc', timestamp: 1, searches: [{ id: 'abc', query: 'floyd', timestamp: 1, results: [], pagination: null }] },
+    ])
+    expect(store.activeSessionId).toBe('abc')
+  })
+
+  it('addEntry prepends a new session wrapping one search, sets it active, and persists to localStorage', () => {
     mockSequentialNow()
     const store = useSearchHistoryStore()
 
     store.addEntry('nirvana', { results, pagination })
 
-    expect(store.entries).toHaveLength(1)
-    expect(store.entries[0]).toMatchObject({ query: 'nirvana', results, pagination })
-    expect(store.activeEntryId).toBe(store.entries[0]!.id)
+    expect(store.sessions).toHaveLength(1)
+    expect(store.sessions[0]!.searches).toHaveLength(1)
+    expect(store.sessions[0]!.searches[0]).toMatchObject({ query: 'nirvana', results, pagination })
+    expect(store.activeSessionId).toBe(store.sessions[0]!.id)
 
     const persisted = JSON.parse(window.localStorage.getItem('discogs:search-history')!)
-    expect(persisted).toEqual(store.entries)
+    expect(persisted).toEqual(store.sessions)
   })
 
-  it('caps history at 10 entries, dropping the oldest', () => {
+  it('caps history at 10 sessions, dropping the oldest', () => {
     mockSequentialNow()
     const store = useSearchHistoryStore()
 
@@ -63,23 +81,52 @@ describe('useSearchHistoryStore', () => {
       store.addEntry(`query-${i}`, { results, pagination })
     }
 
-    expect(store.entries).toHaveLength(10)
-    expect(store.entries[0]!.query).toBe('query-10')
-    expect(store.entries.some((e) => e.query === 'query-0')).toBe(false)
+    expect(store.sessions).toHaveLength(10)
+    expect(store.sessions[0]!.searches[0]!.query).toBe('query-10')
+    expect(store.sessions.some((s) => s.searches[0]!.query === 'query-0')).toBe(false)
   })
 
-  it('setActiveEntry updates activeEntryId and pushes the entry into the discogs store', () => {
+  it('appendSearch adds a search onto the active session instead of creating a new one', () => {
+    mockSequentialNow()
+    const store = useSearchHistoryStore()
+    store.addEntry('rock', { results, pagination })
+    const sessionId = store.sessions[0]!.id
+
+    store.appendSearch('jazz', { results: [], pagination })
+
+    expect(store.sessions).toHaveLength(1)
+    expect(store.sessions[0]!.id).toBe(sessionId)
+    expect(store.sessions[0]!.searches).toHaveLength(2)
+    expect(store.sessions[0]!.searches[1]).toMatchObject({ query: 'jazz', results: [] })
+
+    const persisted = JSON.parse(window.localStorage.getItem('discogs:search-history')!)
+    expect(persisted).toEqual(store.sessions)
+  })
+
+  it('appendSearch creates a new session when there is no active session', () => {
+    mockSequentialNow()
+    const store = useSearchHistoryStore()
+
+    store.appendSearch('jazz', { results, pagination })
+
+    expect(store.sessions).toHaveLength(1)
+    expect(store.sessions[0]!.searches).toHaveLength(1)
+    expect(store.sessions[0]!.searches[0]).toMatchObject({ query: 'jazz', results, pagination })
+    expect(store.activeSessionId).toBe(store.sessions[0]!.id)
+  })
+
+  it('setActiveEntry updates activeSessionId and pushes the last search into the discogs store', () => {
     mockSequentialNow()
     const store = useSearchHistoryStore()
     store.addEntry('first', { results, pagination })
-    const firstId = store.entries[0]!.id
+    const firstId = store.sessions[0]!.id
 
     store.addEntry('second', { results: [], pagination })
-    expect(store.activeEntryId).not.toBe(firstId)
+    expect(store.activeSessionId).not.toBe(firstId)
 
     store.setActiveEntry(firstId)
 
-    expect(store.activeEntryId).toBe(firstId)
+    expect(store.activeSessionId).toBe(firstId)
     const discogsStore = useDiscogsStore()
     expect(discogsStore.results).toEqual(results)
     expect(discogsStore.pagination).toEqual(pagination)
@@ -87,11 +134,26 @@ describe('useSearchHistoryStore', () => {
     expect(discogsStore.lastSearchMode).toBe(SearchMode.Track)
   })
 
+  it('setActiveEntry restores the most recent search when a session has more than one', () => {
+    mockSequentialNow()
+    const store = useSearchHistoryStore()
+    store.addEntry('rock', { results, pagination })
+    const sessionId = store.sessions[0]!.id
+    store.appendSearch('/genre jazz', { results: [], pagination })
+
+    store.addEntry('unrelated', { results, pagination })
+    store.setActiveEntry(sessionId)
+
+    const discogsStore = useDiscogsStore()
+    expect(discogsStore.lastQuery).toBe('/genre jazz')
+    expect(discogsStore.lastSearchMode).toBe(SearchMode.Genre)
+  })
+
   it('setActiveEntry restores genre-search mode for a /genre entry', () => {
     mockSequentialNow()
     const store = useSearchHistoryStore()
     store.addEntry('/genre rock', { results, pagination })
-    const genreId = store.entries[0]!.id
+    const genreId = store.sessions[0]!.id
 
     store.addEntry('second', { results: [], pagination })
     store.setActiveEntry(genreId)
@@ -105,7 +167,7 @@ describe('useSearchHistoryStore', () => {
     mockSequentialNow()
     const store = useSearchHistoryStore()
     store.addEntry('/style acid', { results, pagination })
-    const styleId = store.entries[0]!.id
+    const styleId = store.sessions[0]!.id
 
     store.addEntry('second', { results: [], pagination })
     store.setActiveEntry(styleId)
@@ -119,11 +181,11 @@ describe('useSearchHistoryStore', () => {
     mockSequentialNow()
     const store = useSearchHistoryStore()
     store.addEntry('first', { results, pagination })
-    const activeBefore = store.activeEntryId
+    const activeBefore = store.activeSessionId
 
     store.setActiveEntry('does-not-exist')
 
-    expect(store.activeEntryId).toBe(activeBefore)
+    expect(store.activeSessionId).toBe(activeBefore)
   })
 
   it('clearHistory resets state, removes from localStorage, and clears the discogs store', () => {
@@ -133,8 +195,8 @@ describe('useSearchHistoryStore', () => {
 
     store.clearHistory()
 
-    expect(store.entries).toEqual([])
-    expect(store.activeEntryId).toBeNull()
+    expect(store.sessions).toEqual([])
+    expect(store.activeSessionId).toBeNull()
     expect(window.localStorage.getItem('discogs:search-history')).toBeNull()
 
     const discogsStore = useDiscogsStore()

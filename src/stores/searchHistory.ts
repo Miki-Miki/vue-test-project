@@ -8,7 +8,7 @@ import { parseSearchCommand } from '@/utils/searchCommand'
 const STORAGE_KEY = 'search-history'
 const MAX_ENTRIES = 10
 
-export interface SearchEntry {
+export interface SearchQueryResult {
   id: string
   query: string
   timestamp: number
@@ -16,41 +16,107 @@ export interface SearchEntry {
   pagination: SearchPagination | null
 }
 
-export const useSearchHistoryStore = defineStore('searchHistory', () => {
-  const entries = ref<SearchEntry[]>(lsGet<SearchEntry[]>(STORAGE_KEY) ?? [])
-  const activeEntryId = ref<string | null>(entries.value[0]?.id ?? null)
+export interface SearchSession {
+  id: string
+  timestamp: number
+  searches: SearchQueryResult[]
+}
 
-  function addEntry(
+/** Old, pre-session shape — one flat search per history entry. */
+interface LegacySearchEntry {
+  id: string
+  query: string
+  timestamp: number
+  results: SearchResult[]
+  pagination: SearchPagination | null
+}
+
+function isLegacyShape(value: unknown): value is LegacySearchEntry[] {
+  return Array.isArray(value) && value.length > 0 && !('searches' in (value[0] as object))
+}
+
+function migrateLegacyEntries(legacy: LegacySearchEntry[]): SearchSession[] {
+  return legacy.map((entry) => ({
+    id: entry.id,
+    timestamp: entry.timestamp,
+    searches: [
+      {
+        id: entry.id,
+        query: entry.query,
+        timestamp: entry.timestamp,
+        results: entry.results,
+        pagination: entry.pagination,
+      },
+    ],
+  }))
+}
+
+function loadSessions(): SearchSession[] {
+  const stored = lsGet<SearchSession[] | LegacySearchEntry[]>(STORAGE_KEY) ?? []
+  return isLegacyShape(stored) ? migrateLegacyEntries(stored) : (stored as SearchSession[])
+}
+
+export const useSearchHistoryStore = defineStore('searchHistory', () => {
+  const sessions = ref<SearchSession[]>(loadSessions())
+  const activeSessionId = ref<string | null>(sessions.value[0]?.id ?? null)
+
+  function buildSearch(
     query: string,
     data: { results: SearchResult[]; pagination: SearchPagination },
-  ): void {
-    const entry: SearchEntry = {
+  ): SearchQueryResult {
+    return {
       id: Date.now().toString(),
       query,
       timestamp: Date.now(),
       results: data.results ?? [],
       pagination: data.pagination ?? null,
     }
-    entries.value = [entry, ...entries.value].slice(0, MAX_ENTRIES)
-    activeEntryId.value = entry.id
-    lsSet(STORAGE_KEY, entries.value)
+  }
+
+  function addEntry(
+    query: string,
+    data: { results: SearchResult[]; pagination: SearchPagination },
+  ): void {
+    const search = buildSearch(query, data)
+    const session: SearchSession = { id: search.id, timestamp: search.timestamp, searches: [search] }
+    sessions.value = [session, ...sessions.value].slice(0, MAX_ENTRIES)
+    activeSessionId.value = session.id
+    lsSet(STORAGE_KEY, sessions.value)
+  }
+
+  function appendSearch(
+    query: string,
+    data: { results: SearchResult[]; pagination: SearchPagination },
+  ): void {
+    const activeSession = sessions.value.find((s) => s.id === activeSessionId.value)
+    if (!activeSession) {
+      addEntry(query, data)
+      return
+    }
+
+    const search = buildSearch(query, data)
+    activeSession.searches = [...activeSession.searches, search]
+    sessions.value = [...sessions.value]
+    lsSet(STORAGE_KEY, sessions.value)
   }
 
   function setActiveEntry(id: string): void {
-    const entry = entries.value.find((e) => e.id === id)
-    if (!entry) return
-    activeEntryId.value = id
+    const session = sessions.value.find((s) => s.id === id)
+    if (!session) return
+    activeSessionId.value = id
+
+    const lastSearch = session.searches[session.searches.length - 1]!
     const discogsStore = useDiscogsStore()
     discogsStore.setResults({
-      results: entry.results,
-      pagination: entry.pagination ?? { per_page: 0, pages: 0, page: 1, items: 0 },
+      results: lastSearch.results,
+      pagination: lastSearch.pagination ?? { per_page: 0, pages: 0, page: 1, items: 0 },
     })
-    discogsStore.setQuery(entry.query, parseSearchCommand(entry.query).mode)
+    discogsStore.setQuery(lastSearch.query, parseSearchCommand(lastSearch.query).mode)
   }
 
   function clearHistory(): void {
-    entries.value = []
-    activeEntryId.value = null
+    sessions.value = []
+    activeSessionId.value = null
     lsRemove(STORAGE_KEY)
     const discogsStore = useDiscogsStore()
     discogsStore.setResults({
@@ -59,5 +125,5 @@ export const useSearchHistoryStore = defineStore('searchHistory', () => {
     })
   }
 
-  return { entries, activeEntryId, addEntry, setActiveEntry, clearHistory }
+  return { sessions, activeSessionId, addEntry, appendSearch, setActiveEntry, clearHistory }
 })

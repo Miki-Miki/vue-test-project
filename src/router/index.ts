@@ -14,6 +14,11 @@ const router = createRouter({
       name: 'grid',
       component: () => import('../views/GridView/GridView.vue'),
     },
+    {
+      path: '/tree',
+      name: 'tree',
+      component: () => import('../views/TreeView/TreeView.vue'),
+    },
   ],
 })
 

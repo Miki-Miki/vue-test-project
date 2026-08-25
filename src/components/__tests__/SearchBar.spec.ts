@@ -56,7 +56,7 @@ describe('SearchBar', () => {
     expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?track=nirvana')
     expect(useDiscogsStore().results).toEqual(data.results)
     expect(useDiscogsStore().lastQuery).toBe('nirvana')
-    expect(useSearchHistoryStore().entries).toHaveLength(1)
+    expect(useSearchHistoryStore().sessions).toHaveLength(1)
     expect(wrapper.find('.search-bar-error').exists()).toBe(false)
   })
 

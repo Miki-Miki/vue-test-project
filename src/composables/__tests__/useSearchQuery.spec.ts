@@ -47,7 +47,7 @@ describe('useSearchQuery', () => {
     expect(useDiscogsStore().results).toEqual(data.results)
     expect(useDiscogsStore().lastQuery).toBe('/genre rock')
     expect(useDiscogsStore().lastSearchMode).toBe(SearchMode.Genre)
-    expect(useSearchHistoryStore().entries[0]?.query).toBe('/genre rock')
+    expect(useSearchHistoryStore().sessions[0]?.searches[0]?.query).toBe('/genre rock')
   })
 
   it('builds a style search URL for a /style command and records style mode', async () => {

@@ -55,7 +55,7 @@ describe('SearchHistorySidebar', () => {
     const secondEntry = wrapper.findAll('.search-history-sidebar-body-entries-entry')[1]!
     await secondEntry.trigger('click')
 
-    expect(setActiveEntry).toHaveBeenCalledWith(store.entries[1]!.id)
+    expect(setActiveEntry).toHaveBeenCalledWith(store.sessions[1]!.id)
   })
 
   it('pressing Enter on an entry also calls setActiveEntry', async () => {
@@ -66,7 +66,7 @@ describe('SearchHistorySidebar', () => {
     const wrapper = mount(SearchHistorySidebar)
     await wrapper.find('.search-history-sidebar-body-entries-entry').trigger('keyup.enter')
 
-    expect(setActiveEntry).toHaveBeenCalledWith(store.entries[0]!.id)
+    expect(setActiveEntry).toHaveBeenCalledWith(store.sessions[0]!.id)
   })
 
   it('clicking "Clear history" calls clearHistory', async () => {
