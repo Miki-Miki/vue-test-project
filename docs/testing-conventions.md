@@ -6,7 +6,7 @@ Read this before writing or generating new unit tests, or before extending exist
 
 - Jest 30 + `jsdom`, config in `jest.config.cjs`.
 - `@vue/test-utils` for component/view mounting, `@vue/vue3-jest` for `.vue` transform.
-- Coverage gate: **80%** branches/functions/lines/statements, collected over `src/components`, `src/views`, `src/App.vue`, `src/stores`, `src/composables`, `src/utils`.
+- Coverage gate: **80%** branches/functions/lines/statements, collected over `src/components`, `src/views`, `src/App.vue`, `src/stores`, `src/composables`, `src/utils`, `src/api`.
 - Shared setup in `src/test/setup.ts`: mocks `window.matchMedia` and clears `localStorage`/`sessionStorage`/theme attributes in a global `afterEach`.
 
 ## Mock at the real boundary, not deeper

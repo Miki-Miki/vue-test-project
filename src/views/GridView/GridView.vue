@@ -9,20 +9,27 @@ import type {
 } from 'ag-grid-community'
 import { AgGridVue } from 'ag-grid-vue3'
 import { useDiscogsStore } from '@/stores/discogs'
-import type { DiscogsResult } from '@/stores/discogs'
-import { rankResults } from '@/utils/relevance'
+import { SearchMode } from '@/types/search'
+import type { SearchResult } from '@/types/search'
+import { rankResults, rankByPopularity } from '@/utils/relevance'
+import { useSearchQuery } from '@/composables/useSearchQuery'
 import DetailPanel from '@/components/DetailPanel/DetailPanel.vue'
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
 const store = useDiscogsStore()
-const rowData = computed(() => rankResults(store.lastQuery, store.results))
-const selectedRow = ref<DiscogsResult | null>(null)
+const { searchByCommand } = useSearchQuery()
+const rowData = computed(() =>
+  store.lastSearchMode === SearchMode.Track
+    ? rankResults(store.lastQuery, store.results)
+    : rankByPopularity(store.results),
+)
+const selectedRow = ref<SearchResult | null>(null)
 
 const joinArray = (params: ValueFormatterParams) =>
   Array.isArray(params.value) ? params.value.join(', ') : (params.value ?? '')
 
-const colDefs: ColDef<DiscogsResult>[] = [
+const colDefs: ColDef<SearchResult>[] = [
   { field: 'title', width: 350 },
   { field: 'type' },
   { field: 'year' },
@@ -31,12 +38,17 @@ const colDefs: ColDef<DiscogsResult>[] = [
   { field: 'style', valueFormatter: joinArray },
   {
     headerName: 'Want',
-    valueGetter: (params: ValueGetterParams<DiscogsResult>) => params.data?.community?.want,
+    valueGetter: (params: ValueGetterParams<SearchResult>) => params.data?.community?.want,
   },
 ]
 
-function onRowClicked(event: RowClickedEvent<DiscogsResult>) {
+function onRowClicked(event: RowClickedEvent<SearchResult>) {
   selectedRow.value = selectedRow.value?.id === event.data?.id ? null : (event.data ?? null)
+}
+
+function onCommandSelect(mode: SearchMode, value: string) {
+  selectedRow.value = null
+  void searchByCommand(mode, value)
 }
 </script>
 
@@ -56,6 +68,7 @@ function onRowClicked(event: RowClickedEvent<DiscogsResult>) {
         v-if="selectedRow"
         :result="selectedRow"
         @close="selectedRow = null"
+        @command-select="onCommandSelect"
       />
     </template>
   </div>

@@ -1,8 +1,9 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { lsGet, lsSet, lsRemove } from '@/utils/localStorage'
-import type { DiscogsResult, DiscogsPagination } from '@/stores/discogs'
+import type { SearchResult, SearchPagination } from '@/types/search'
 import { useDiscogsStore } from '@/stores/discogs'
+import { parseSearchCommand } from '@/utils/searchCommand'
 
 const STORAGE_KEY = 'search-history'
 const MAX_ENTRIES = 10
@@ -11,8 +12,8 @@ export interface SearchEntry {
   id: string
   query: string
   timestamp: number
-  results: DiscogsResult[]
-  pagination: DiscogsPagination | null
+  results: SearchResult[]
+  pagination: SearchPagination | null
 }
 
 export const useSearchHistoryStore = defineStore('searchHistory', () => {
@@ -21,7 +22,7 @@ export const useSearchHistoryStore = defineStore('searchHistory', () => {
 
   function addEntry(
     query: string,
-    data: { results: DiscogsResult[]; pagination: DiscogsPagination },
+    data: { results: SearchResult[]; pagination: SearchPagination },
   ): void {
     const entry: SearchEntry = {
       id: Date.now().toString(),
@@ -44,6 +45,7 @@ export const useSearchHistoryStore = defineStore('searchHistory', () => {
       results: entry.results,
       pagination: entry.pagination ?? { per_page: 0, pages: 0, page: 1, items: 0 },
     })
+    discogsStore.setQuery(entry.query, parseSearchCommand(entry.query).mode)
   }
 
   function clearHistory(): void {

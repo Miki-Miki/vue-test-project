@@ -52,6 +52,14 @@ export function scoreTitle(query: string, title: string): TitleScore {
   return { tier: 0, wordMatchRatio: 0 }
 }
 
+export function compareByWantDesc<T extends { community?: { want: number } }>(a: T, b: T): number {
+  return (b.community?.want ?? 0) - (a.community?.want ?? 0)
+}
+
+export function rankByPopularity<T extends { community?: { want: number } }>(results: T[]): T[] {
+  return [...results].sort(compareByWantDesc)
+}
+
 export function rankResults<T extends { title: string; community?: { want: number } }>(
   query: string,
   results: T[],
@@ -63,7 +71,7 @@ export function rankResults<T extends { title: string; community?: { want: numbe
       if (a.score.wordMatchRatio !== b.score.wordMatchRatio) {
         return b.score.wordMatchRatio - a.score.wordMatchRatio
       }
-      return (b.result.community?.want ?? 0) - (a.result.community?.want ?? 0)
+      return compareByWantDesc(a.result, b.result)
     })
     .map(({ result }) => result)
 }

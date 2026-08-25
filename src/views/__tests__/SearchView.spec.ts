@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { mount } from '@vue/test-utils'
 import SearchView from '@/views/SearchView/SearchView.vue'
 import { useDiscogsStore } from '@/stores/discogs'
-import type { DiscogsResult } from '@/stores/discogs'
+import type { SearchResult } from '@/types/search'
 
 const mockAuthenticated = ref(true)
 
@@ -11,7 +11,7 @@ jest.mock('@/composables/useDiscogsAuth', () => ({
   useDiscogsAuth: () => ({ authenticated: mockAuthenticated, login: jest.fn(), logout: jest.fn() }),
 }))
 
-const result: DiscogsResult = {
+const result: SearchResult = {
   id: 1,
   title: 'Nirvana - Nevermind',
   type: 'release',

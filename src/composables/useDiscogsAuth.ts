@@ -1,4 +1,5 @@
 import { ref, onMounted } from 'vue'
+import { fetchAuthStatus, login as loginRequest } from '@/api/discogs'
 
 const SESSION_KEY = 'discogs_authenticated'
 
@@ -8,8 +9,7 @@ const authenticated = ref(sessionStorage.getItem(SESSION_KEY) === 'true')
 export function useDiscogsAuth() {
   onMounted(async () => {
     try {
-      const res = await fetch('/auth/discogs/status')
-      const data = await res.json()
+      const { data } = await fetchAuthStatus()
       authenticated.value = data.authenticated
       // Keep sessionStorage in sync; clear it if the dev-server token was lost (e.g. Vite restart)
       if (data.authenticated) {
@@ -23,9 +23,8 @@ export function useDiscogsAuth() {
   })
 
   async function login() {
-    const res = await fetch('/auth/discogs/login', { method: 'POST' })
-    const { authorizeUrl } = await res.json()
-    window.location.href = authorizeUrl
+    const { data } = await loginRequest()
+    window.location.href = data.authorizeUrl
   }
 
   function logout() {

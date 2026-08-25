@@ -1,41 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { useDiscogsAuth } from '@/composables/useDiscogsAuth'
-import { useDiscogsStore } from '@/stores/discogs'
-import { useSearchHistoryStore } from '@/stores/searchHistory'
+import { useSearchQuery } from '@/composables/useSearchQuery'
+import { SEARCH_COMMANDS } from '@/utils/searchCommand'
 
 const { authenticated } = useDiscogsAuth()
-const store = useDiscogsStore()
-const historyStore = useSearchHistoryStore()
+const { query, loading, error, search } = useSearchQuery()
 
-const query = ref('')
-const loading = ref(false)
-const error = ref('')
-
-async function search() {
-  if (!query.value.trim()) return
-
-  loading.value = true
-  error.value = ''
-
-  try {
-    const url = `/api/discogs/database/search?track=${encodeURIComponent(query.value)}`
-    const response = await fetch(url)
-    const data = await response.json()
-
-    if (response.ok) {
-      store.setResults(data)
-      store.setQuery(query.value)
-      historyStore.addEntry(query.value, data)
-    } else {
-      error.value = `HTTP ${response.status}: ${response.statusText}`
-    }
-  } catch (err) {
-    error.value = err instanceof Error ? err.message : 'An unknown error occurred'
-  } finally {
-    loading.value = false
-  }
-}
+const placeholder = computed(
+  () => `Search artists, releases, labels… or ${SEARCH_COMMANDS.map((c) => c.example).join(', ')}`,
+)
 </script>
 
 <template>
@@ -45,7 +19,7 @@ async function search() {
         v-model="query"
         class="search-bar-controls-input"
         type="text"
-        placeholder="Search artists, releases, labels…"
+        :placeholder="placeholder"
         :disabled="!authenticated || loading"
         @keyup.enter="search"
       />

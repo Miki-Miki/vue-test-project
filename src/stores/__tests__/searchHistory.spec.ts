@@ -1,10 +1,11 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { useSearchHistoryStore } from '@/stores/searchHistory'
 import { useDiscogsStore } from '@/stores/discogs'
-import type { DiscogsResult, DiscogsPagination } from '@/stores/discogs'
+import { SearchMode } from '@/types/search'
+import type { SearchResult, SearchPagination } from '@/types/search'
 
-const pagination: DiscogsPagination = { per_page: 50, pages: 1, page: 1, items: 1 }
-const results: DiscogsResult[] = [
+const pagination: SearchPagination = { per_page: 50, pages: 1, page: 1, items: 1 }
+const results: SearchResult[] = [
   {
     id: 1,
     title: 'Nirvana - Nevermind',
@@ -82,6 +83,36 @@ describe('useSearchHistoryStore', () => {
     const discogsStore = useDiscogsStore()
     expect(discogsStore.results).toEqual(results)
     expect(discogsStore.pagination).toEqual(pagination)
+    expect(discogsStore.lastQuery).toBe('first')
+    expect(discogsStore.lastSearchMode).toBe(SearchMode.Track)
+  })
+
+  it('setActiveEntry restores genre-search mode for a /genre entry', () => {
+    mockSequentialNow()
+    const store = useSearchHistoryStore()
+    store.addEntry('/genre rock', { results, pagination })
+    const genreId = store.entries[0]!.id
+
+    store.addEntry('second', { results: [], pagination })
+    store.setActiveEntry(genreId)
+
+    const discogsStore = useDiscogsStore()
+    expect(discogsStore.lastQuery).toBe('/genre rock')
+    expect(discogsStore.lastSearchMode).toBe(SearchMode.Genre)
+  })
+
+  it('setActiveEntry restores style-search mode for a /style entry', () => {
+    mockSequentialNow()
+    const store = useSearchHistoryStore()
+    store.addEntry('/style acid', { results, pagination })
+    const styleId = store.entries[0]!.id
+
+    store.addEntry('second', { results: [], pagination })
+    store.setActiveEntry(styleId)
+
+    const discogsStore = useDiscogsStore()
+    expect(discogsStore.lastQuery).toBe('/style acid')
+    expect(discogsStore.lastSearchMode).toBe(SearchMode.Style)
   })
 
   it('setActiveEntry is a no-op for an unknown id', () => {

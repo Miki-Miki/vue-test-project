@@ -1,4 +1,4 @@
-import { normalize, rankResults, scoreTitle } from '@/utils/relevance'
+import { normalize, rankResults, rankByPopularity, scoreTitle } from '@/utils/relevance'
 
 describe('normalize', () => {
   it('lowercases, strips diacritics/punctuation, and collapses whitespace', () => {
@@ -78,6 +78,40 @@ describe('rankResults', () => {
   it('does not mutate the input array', () => {
     const copy = [...results]
     rankResults('bohemian rhapsody', results)
+    expect(results).toEqual(copy)
+  })
+})
+
+describe('rankByPopularity', () => {
+  const results = [
+    { title: 'Various - Greatest Hits of the 80s', community: { want: 900, have: 100 } },
+    { title: 'Someone Unrelated', community: { want: 800, have: 100 } },
+    { title: 'Another Compilation', community: { want: 700, have: 100 } },
+    { title: 'Queen - Bohemian Rhapsody (Live)', community: { want: 50, have: 10 } },
+    { title: 'Bohemian Rhapsody', community: { want: 10, have: 5 } },
+  ]
+
+  it('sorts by community.want, descending', () => {
+    const ranked = rankByPopularity(results)
+    expect(ranked.map((r) => r.community.want)).toEqual([900, 800, 700, 50, 10])
+  })
+
+  it('treats a missing community as want 0, sorting it last', () => {
+    const withMissing: { title: string; community?: { want: number; have: number } }[] = [
+      { title: 'A', community: { want: 5, have: 0 } },
+      { title: 'B' },
+    ]
+    const ranked = rankByPopularity(withMissing)
+    expect(ranked.map((r) => r.title)).toEqual(['A', 'B'])
+  })
+
+  it('returns an empty array unchanged', () => {
+    expect(rankByPopularity([])).toEqual([])
+  })
+
+  it('does not mutate the input array', () => {
+    const copy = [...results]
+    rankByPopularity(results)
     expect(results).toEqual(copy)
   })
 })

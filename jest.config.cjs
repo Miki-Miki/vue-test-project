@@ -21,6 +21,7 @@ module.exports = {
     'src/stores/**/*.ts',
     'src/composables/**/*.ts',
     'src/utils/**/*.ts',
+    'src/api/**/*.ts',
     '!src/components/icons/**',
     '!src/components/WelcomeItem.vue',
   ],

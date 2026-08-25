@@ -1,8 +1,9 @@
 import { mount } from '@vue/test-utils'
 import DetailPanel from '@/components/DetailPanel/DetailPanel.vue'
-import type { DiscogsResult } from '@/stores/discogs'
+import { SearchMode } from '@/types/search'
+import type { SearchResult } from '@/types/search'
 
-const baseResult: DiscogsResult = {
+const baseResult: SearchResult = {
   id: 1,
   title: 'Nirvana - Nevermind',
   type: 'release',
@@ -42,17 +43,58 @@ describe('DetailPanel', () => {
     expect(wrapper.find('.detail-panel-artist').exists()).toBe(false)
   })
 
-  it('renders genre and style values as tags', () => {
+  it('renders both genre and style tags as clickable buttons', () => {
     const wrapper = mount(DetailPanel, {
       props: { result: { ...baseResult, genre: ['Rock'], style: ['Grunge'] } },
     })
     const tags = wrapper.findAll('.detail-panel-tags-tag').map((tag) => tag.text())
     expect(tags).toEqual(['Rock', 'Grunge'])
+
+    const buttons = wrapper.findAll('button.detail-panel-tags-tag-clickable')
+    expect(buttons.map((b) => b.text())).toEqual(['Rock', 'Grunge'])
   })
 
   it('renders no tags when genre and style are both missing', () => {
     const wrapper = mount(DetailPanel, { props: { result: baseResult } })
     expect(wrapper.findAll('.detail-panel-tags-tag')).toHaveLength(0)
+  })
+
+  it('renders only a genre tag when style is missing', () => {
+    const wrapper = mount(DetailPanel, {
+      props: { result: { ...baseResult, genre: ['Rock'] } },
+    })
+    const buttons = wrapper.findAll('button.detail-panel-tags-tag-clickable')
+    expect(buttons).toHaveLength(1)
+    expect(buttons[0]!.text()).toBe('Rock')
+  })
+
+  it('renders only a style tag when genre is missing', () => {
+    const wrapper = mount(DetailPanel, {
+      props: { result: { ...baseResult, style: ['Grunge'] } },
+    })
+    const buttons = wrapper.findAll('button.detail-panel-tags-tag-clickable')
+    expect(buttons).toHaveLength(1)
+    expect(buttons[0]!.text()).toBe('Grunge')
+  })
+
+  it('emits commandSelect with SearchMode.Genre when a genre tag is clicked', async () => {
+    const wrapper = mount(DetailPanel, {
+      props: { result: { ...baseResult, genre: ['Rock', 'Pop'] } },
+    })
+    const buttons = wrapper.findAll('button.detail-panel-tags-tag-clickable')
+    await buttons[1]!.trigger('click')
+
+    expect(wrapper.emitted('commandSelect')).toEqual([[SearchMode.Genre, 'Pop']])
+  })
+
+  it('emits commandSelect with SearchMode.Style when a style tag is clicked', async () => {
+    const wrapper = mount(DetailPanel, {
+      props: { result: { ...baseResult, genre: ['Rock'], style: ['Grunge'] } },
+    })
+    const buttons = wrapper.findAll('button.detail-panel-tags-tag-clickable')
+    await buttons[1]!.trigger('click')
+
+    expect(wrapper.emitted('commandSelect')).toEqual([[SearchMode.Style, 'Grunge']])
   })
 
   it('joins populated format/label arrays with a comma', () => {

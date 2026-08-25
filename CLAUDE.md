@@ -14,9 +14,13 @@ Vue 3 + Vite + TypeScript SPA for searching the Discogs music database: a chat-s
 
 [src/CLAUDE.md](src/CLAUDE.md) is the entry point and loads automatically whenever you work under `src/`. It routes to two places: [.claude/rules/styling-structure.md](.claude/rules/styling-structure.md) (selector naming, ITCSS layout, component folders — always in effect) and the `styling-design-system` skill (tokens, colors, dark theme, component recipes — loaded on demand for actual visual/design decisions).
 
+## Generic component naming
+
+Generic/reusable components (results grid, detail panel, etc.) must not carry provider-specific names in their types, props, or internal variables — see [.claude/rules/component-naming.md](.claude/rules/component-naming.md) (always in effect). Provider-specific naming is reserved for the actual integration layer (`src/stores/discogs.ts`, `useDiscogsAuth.ts`, `plugins/discogs-oauth.ts`).
+
 ## Discogs API feature work
 
-Before touching Discogs search, auth, or the results grid — `src/views/SearchView.vue`, `src/views/GridView.vue`, `src/stores/discogs.ts`, `src/composables/useDiscogsAuth.ts`, or `plugins/discogs-oauth.ts` — read [docs/discogs-api.md](docs/discogs-api.md) first. It covers the API base URL, the User-Agent proxy workaround, rate limits, the OAuth 1.0a flow, endpoints, and response schemas.
+Before touching Discogs search, auth, or the results grid — `src/views/SearchView.vue`, `src/views/GridView.vue`, `src/stores/discogs.ts`, `src/composables/useDiscogsAuth.ts`, `src/composables/useSearchQuery.ts`, `src/utils/searchCommand.ts`, `src/api/discogs/`, or `plugins/discogs-oauth.ts` — read [docs/discogs-api.md](docs/discogs-api.md) first. It covers the API base URL, the User-Agent proxy workaround, rate limits, the OAuth 1.0a flow, endpoints, and response schemas.
 
 ## Writing tests
 
@@ -29,7 +33,8 @@ Before writing or generating new unit tests, or extending existing ones under an
 ├── settings.json           # team-shared config (permissions, MCP servers) — committed
 ├── settings.local.json     # personal/machine overrides — gitignored, do not rely on it for team behavior
 ├── rules/                  # always-loaded structural rules, injected alongside CLAUDE.md
-│   └── styling-structure.md # selector naming, ITCSS layout, component-folder convention
+│   ├── styling-structure.md # selector naming, ITCSS layout, component-folder convention
+│   └── component-naming.md # generic vs. provider-specific naming for components/types/variables
 ├── agents/                 # subagents: focused, tool-scoped workers for specific jobs
 │   └── ui-designer.md      # turns a submitted UI screenshot into Vue components matching the design system
 └── skills/                 # skills: on-demand instructions Claude loads only when relevant/invoked

@@ -4,6 +4,8 @@ import { mount, flushPromises } from '@vue/test-utils'
 import SearchBar from '@/components/SearchBar/SearchBar.vue'
 import { useDiscogsStore } from '@/stores/discogs'
 import { useSearchHistoryStore } from '@/stores/searchHistory'
+import { useSearchQuery } from '@/composables/useSearchQuery'
+import { SearchMode } from '@/types/search'
 
 const mockAuthenticated = ref(true)
 
@@ -25,6 +27,7 @@ describe('SearchBar', () => {
     setActivePinia(createPinia())
     mockAuthenticated.value = true
     global.fetch = jest.fn()
+    useSearchQuery().reset()
   })
 
   it('disables the input and button when unauthenticated', () => {
@@ -108,5 +111,59 @@ describe('SearchBar', () => {
     await wrapper.find('input').trigger('keyup.enter')
 
     expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?track=nirvana')
+  })
+
+  it('routes a /genre command to the genre search endpoint and records the genre mode', async () => {
+    const data = { results: [{ id: 1, title: 'Nevermind' }], pagination: { per_page: 1, pages: 1, page: 1, items: 1 } }
+    ;(global.fetch as jest.Mock).mockResolvedValue(jsonResponse(data))
+
+    const wrapper = mount(SearchBar)
+    await wrapper.find('input').setValue('/genre rock')
+    await wrapper.find('button').trigger('click')
+    await flushPromises()
+
+    expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?genre=rock&type=release')
+    expect(useDiscogsStore().lastQuery).toBe('/genre rock')
+    expect(useDiscogsStore().lastSearchMode).toBe(SearchMode.Genre)
+  })
+
+  it('routes a /style command to the style search endpoint and records the style mode', async () => {
+    const data = { results: [{ id: 2, title: 'Acid Tracks' }], pagination: { per_page: 1, pages: 1, page: 1, items: 1 } }
+    ;(global.fetch as jest.Mock).mockResolvedValue(jsonResponse(data))
+
+    const wrapper = mount(SearchBar)
+    await wrapper.find('input').setValue('/style acid')
+    await wrapper.find('button').trigger('click')
+    await flushPromises()
+
+    expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?style=acid&type=release')
+    expect(useDiscogsStore().lastQuery).toBe('/style acid')
+    expect(useDiscogsStore().lastSearchMode).toBe(SearchMode.Style)
+  })
+
+  it('reflects a search triggered externally (e.g. from a genre-tag click) in the input', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue(
+      jsonResponse({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
+    )
+
+    const wrapper = mount(SearchBar)
+    await useSearchQuery().searchByCommand(SearchMode.Genre, 'Hip Hop')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('input').element.value).toBe('/genre "Hip Hop"')
+    expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?genre=Hip%20Hop&type=release')
+  })
+
+  it('reflects a search triggered externally from a style-tag click in the input', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue(
+      jsonResponse({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
+    )
+
+    const wrapper = mount(SearchBar)
+    await useSearchQuery().searchByCommand(SearchMode.Style, 'New Beat')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('input').element.value).toBe('/style "New Beat"')
+    expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?style=New%20Beat&type=release')
   })
 })

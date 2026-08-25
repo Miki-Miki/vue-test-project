@@ -1,46 +1,23 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
-
-export interface DiscogsResult {
-  id: number
-  title: string
-  type: string
-  year?: string
-  country?: string
-  genre?: string[]
-  style?: string[]
-  format?: string[]
-  label?: string[]
-  catno?: string
-  thumb?: string
-  uri: string
-  resource_url: string
-  community?: {
-    want: number
-    have: number
-  }
-}
-
-export interface DiscogsPagination {
-  per_page: number
-  pages: number
-  page: number
-  items: number
-}
+import { SearchMode } from '@/types/search'
+import type { SearchResult, SearchPagination } from '@/types/search'
 
 export const useDiscogsStore = defineStore('discogs', () => {
-  const results = ref<DiscogsResult[]>([])
-  const pagination = ref<DiscogsPagination | null>(null)
+  const results = ref<SearchResult[]>([])
+  const pagination = ref<SearchPagination | null>(null)
   const lastQuery = ref('')
+  const lastSearchMode = ref<SearchMode>(SearchMode.Track)
 
-  function setResults(data: { results: DiscogsResult[]; pagination: DiscogsPagination }) {
+  function setResults(data: { results: SearchResult[]; pagination: SearchPagination }) {
     results.value = data.results ?? []
     pagination.value = data.pagination ?? null
   }
 
-  function setQuery(query: string) {
+  function setQuery(query: string, mode: SearchMode = SearchMode.Track) {
     lastQuery.value = query
+    lastSearchMode.value = mode
   }
 
-  return { results, pagination, lastQuery, setResults, setQuery }
+  return { results, pagination, lastQuery, lastSearchMode, setResults, setQuery }
 })
