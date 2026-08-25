@@ -1,23 +1,20 @@
 import { defineComponent } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount, flushPromises } from '@vue/test-utils'
-import type {
-  ColDef,
-  ValueFormatterFunc,
-  ValueFormatterParams,
-  ValueGetterFunc,
-  ValueGetterParams,
-} from 'ag-grid-community'
 import GridView from '@/views/GridView/GridView.vue'
 import { useDiscogsStore } from '@/stores/discogs'
 import { SearchMode } from '@/types/search'
 import type { SearchResult } from '@/types/search'
 
-const AgGridVueStub = defineComponent({
-  name: 'AgGridVue',
-  props: ['rowData', 'columnDefs'],
-  emits: ['row-clicked'],
-  template: '<div class="ag-grid-stub" />',
+const VDataTableStub = defineComponent({
+  name: 'VDataTable',
+  props: ['items', 'headers', 'rowProps'],
+  template: `
+    <div class="v-data-table-stub">
+      <slot name="item.genre" v-for="item in items" :value="item.genre" :key="'genre-' + item.id" />
+      <slot name="item.style" v-for="item in items" :value="item.style" :key="'style-' + item.id" />
+    </div>
+  `,
 })
 
 const results: SearchResult[] = [
@@ -41,7 +38,14 @@ const results: SearchResult[] = [
 ]
 
 function mountGridView() {
-  return mount(GridView, { global: { stubs: { AgGridVue: AgGridVueStub } } })
+  return mount(GridView, { global: { stubs: { VDataTable: VDataTableStub } } })
+}
+
+function clickRow(wrapper: ReturnType<typeof mountGridView>, item: SearchResult) {
+  const rowProps = wrapper.findComponent(VDataTableStub).props('rowProps') as (data: {
+    item: SearchResult
+  }) => { onClick: () => void }
+  return rowProps({ item }).onClick()
 }
 
 describe('GridView', () => {
@@ -50,98 +54,74 @@ describe('GridView', () => {
     global.fetch = jest.fn()
   })
 
-  it('shows the empty state and no grid when there are no results', () => {
+  it('shows the empty state and no table when there are no results', () => {
     const wrapper = mountGridView()
     expect(wrapper.text()).toContain('Run a search to populate the grid.')
-    expect(wrapper.findComponent(AgGridVueStub).exists()).toBe(false)
+    expect(wrapper.findComponent(VDataTableStub).exists()).toBe(false)
   })
 
-  it('passes rowData and columnDefs to the grid', () => {
+  it('passes items and headers to the table', () => {
     useDiscogsStore().setResults({
       results,
       pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
     })
     const wrapper = mountGridView()
 
-    const grid = wrapper.findComponent(AgGridVueStub)
-    expect(grid.exists()).toBe(true)
-    expect(grid.props('rowData')).toEqual(results)
+    const table = wrapper.findComponent(VDataTableStub)
+    expect(table.exists()).toBe(true)
+    expect(table.props('items')).toEqual(results)
   })
 
-  it('ranks rowData by keyword relevance ahead of "want" when a track query is active', () => {
+  it('ranks items by keyword relevance ahead of "want" when a track query is active', () => {
     const store = useDiscogsStore()
     store.setResults({ results, pagination: { per_page: 2, pages: 1, page: 1, items: 2 } })
     store.setQuery('the wall')
     const wrapper = mountGridView()
 
-    const grid = wrapper.findComponent(AgGridVueStub)
-    expect((grid.props('rowData') as SearchResult[]).map((r) => r.id)).toEqual([2, 1])
-    expect((grid.props('columnDefs') as ColDef[]).map((c) => c.field ?? c.headerName)).toEqual([
+    const table = wrapper.findComponent(VDataTableStub)
+    expect((table.props('items') as SearchResult[]).map((r) => r.id)).toEqual([2, 1])
+    expect((table.props('headers') as { key: string }[]).map((h) => h.key)).toEqual([
       'title',
       'type',
       'year',
       'country',
       'genre',
       'style',
-      'Want',
+      'community.want',
     ])
   })
 
-  it('ranks rowData by "want" descending when in genre search mode, ignoring title relevance', () => {
+  it('ranks items by "want" descending when in genre search mode, ignoring title relevance', () => {
     const store = useDiscogsStore()
     store.setResults({ results, pagination: { per_page: 2, pages: 1, page: 1, items: 2 } })
     store.setQuery('/genre rock', SearchMode.Genre)
     const wrapper = mountGridView()
 
-    const grid = wrapper.findComponent(AgGridVueStub)
-    expect((grid.props('rowData') as SearchResult[]).map((r) => r.id)).toEqual([1, 2])
+    const table = wrapper.findComponent(VDataTableStub)
+    expect((table.props('items') as SearchResult[]).map((r) => r.id)).toEqual([1, 2])
   })
 
-  it('ranks rowData by "want" descending when in style search mode, ignoring title relevance', () => {
+  it('ranks items by "want" descending when in style search mode, ignoring title relevance', () => {
     const store = useDiscogsStore()
     store.setResults({ results, pagination: { per_page: 2, pages: 1, page: 1, items: 2 } })
     store.setQuery('/style acid', SearchMode.Style)
     const wrapper = mountGridView()
 
-    const grid = wrapper.findComponent(AgGridVueStub)
-    expect((grid.props('rowData') as SearchResult[]).map((r) => r.id)).toEqual([1, 2])
+    const table = wrapper.findComponent(VDataTableStub)
+    expect((table.props('items') as SearchResult[]).map((r) => r.id)).toEqual([1, 2])
   })
 
-  it('joins array values via the genre/style valueFormatter', () => {
+  it('joins array values via the genre/style item slots', () => {
     useDiscogsStore().setResults({
       results,
       pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
     })
     const wrapper = mountGridView()
-    const colDefs = wrapper
-      .findComponent(AgGridVueStub)
-      .props('columnDefs') as ColDef<SearchResult>[]
-    const genreCol = colDefs.find((c) => c.field === 'genre')!
 
-    const formatter = genreCol.valueFormatter as ValueFormatterFunc<SearchResult>
-    expect(formatter({ value: ['Rock', 'Non-Music'] } as ValueFormatterParams)).toBe(
-      'Rock, Non-Music',
-    )
-    expect(formatter({ value: undefined } as unknown as ValueFormatterParams)).toBe('')
+    expect(wrapper.text()).toContain('Rock, Non-Music')
   })
 
-  it("reads community.want via the hidden Want column's valueGetter", () => {
-    useDiscogsStore().setResults({
-      results,
-      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
-    })
-    const wrapper = mountGridView()
-    const colDefs = wrapper
-      .findComponent(AgGridVueStub)
-      .props('columnDefs') as ColDef<SearchResult>[]
-    const wantCol = colDefs.find((c) => c.headerName === 'Want')!
-
-    const getter = wantCol.valueGetter as ValueGetterFunc<SearchResult>
-    expect(getter({ data: results[0] } as ValueGetterParams<SearchResult>)).toBe(500)
-    expect(getter({ data: results[1] } as ValueGetterParams<SearchResult>)).toBeUndefined()
-  })
-
-  it('selects a row on row-clicked and shows its detail panel, deselecting on a second click', async () => {
+  it('selects a row via row-props onClick and shows its detail panel, deselecting on a second click', async () => {
     useDiscogsStore().setResults({
       results,
       pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
@@ -149,12 +129,14 @@ describe('GridView', () => {
     const wrapper = mountGridView()
     expect(wrapper.findComponent({ name: 'DetailPanel' }).exists()).toBe(false)
 
-    await wrapper.findComponent(AgGridVueStub).vm.$emit('row-clicked', { data: results[0] })
+    clickRow(wrapper, results[0])
+    await wrapper.vm.$nextTick()
     const panel = wrapper.findComponent({ name: 'DetailPanel' })
     expect(panel.exists()).toBe(true)
     expect(panel.props('result')).toEqual(results[0])
 
-    await wrapper.findComponent(AgGridVueStub).vm.$emit('row-clicked', { data: results[0] })
+    clickRow(wrapper, results[0])
+    await wrapper.vm.$nextTick()
     expect(wrapper.findComponent({ name: 'DetailPanel' }).exists()).toBe(false)
   })
 
@@ -165,7 +147,8 @@ describe('GridView', () => {
     })
     const wrapper = mountGridView()
 
-    await wrapper.findComponent(AgGridVueStub).vm.$emit('row-clicked', { data: results[0] })
+    clickRow(wrapper, results[0])
+    await wrapper.vm.$nextTick()
     const panel = wrapper.findComponent({ name: 'DetailPanel' })
     expect(panel.exists()).toBe(true)
 
@@ -182,11 +165,13 @@ describe('GridView', () => {
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: () => Promise.resolve({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
+      json: () =>
+        Promise.resolve({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
     })
 
     const wrapper = mountGridView()
-    await wrapper.findComponent(AgGridVueStub).vm.$emit('row-clicked', { data: results[0] })
+    clickRow(wrapper, results[0])
+    await wrapper.vm.$nextTick()
     const panel = wrapper.findComponent({ name: 'DetailPanel' })
 
     await panel.vm.$emit('command-select', SearchMode.Genre, 'Rock')
@@ -206,11 +191,13 @@ describe('GridView', () => {
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: () => Promise.resolve({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
+      json: () =>
+        Promise.resolve({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
     })
 
     const wrapper = mountGridView()
-    await wrapper.findComponent(AgGridVueStub).vm.$emit('row-clicked', { data: results[0] })
+    clickRow(wrapper, results[0])
+    await wrapper.vm.$nextTick()
     const panel = wrapper.findComponent({ name: 'DetailPanel' })
 
     await panel.vm.$emit('command-select', SearchMode.Style, 'Acid')

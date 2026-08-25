@@ -1,5 +1,5 @@
 ---
-description: Design tokens, colors, spacing, typography, dark theme, and component recipes (badges, buttons, filter tabs, checkboxes, AG Grid theming) for this project's UI. Use whenever writing or editing a component's visual styles, choosing a color/spacing/radius value, building a new UI element, or theming AG Grid — not for file/folder or selector-naming questions (see .claude/rules/styling-structure.md for those, which is always loaded).
+description: Design tokens, colors, spacing, typography, dark theme, and component recipes (badges, buttons, filter tabs, checkboxes, Vuetify data-table theming) for this project's UI. Use whenever writing or editing a component's visual styles, choosing a color/spacing/radius value, building a new UI element, or theming the Vuetify data table — not for file/folder or selector-naming questions (see .claude/rules/styling-structure.md for those, which is always loaded).
 ---
 
 ## Design Philosophy
@@ -32,7 +32,7 @@ function toggleTheme() {
 }
 ```
 
-All theme-sensitive tokens (surfaces, borders, text, status colors, AG Grid overrides) are already declared for both themes in `src/assets/styles/_variables.scss`. Never hardcode light or dark color values in components — always use `var(--color-*)` tokens so switching is automatic.
+All theme-sensitive tokens (surfaces, borders, text, status colors) are already declared for both themes in `src/assets/styles/_variables.scss`. Never hardcode light or dark color values in components — always use `var(--color-*)` tokens so switching is automatic.
 
 ## Color System
 
@@ -73,86 +73,51 @@ These are used for status badges (e.g. payment status, fulfillment status):
 
 ## Components
 
-### Tables / Grids (AG Grid)
+### Tables (Vuetify `v-data-table`)
 
-Use AG Grid's Theming API (`themeQuartz` or `themeBalham` as the base). Override via CSS custom properties on `.ag-theme-*` or globally.
+Use Vuetify's `<v-data-table>` with `density="compact"` for tight, data-dense rows. Vuetify has no built-in awareness of this project's `--color-*` tokens, so override it via `:deep()` selectors inside the consuming component's own scoped stylesheet (the third-party-DOM exception to the `&-child-name` rule in [.claude/rules/styling-structure.md](../../rules/styling-structure.md) §1 rule 6) — never in the shared `styles/` tree, since the table is specific to one component/view.
 
-**Required overrides in SCSS:**
-
-```scss
-// In a component's scoped style block (see the per-component-folder convention
-// in .claude/rules/styling-structure.md) or src/assets/styles/_objects.scss for a global override
-:root {
-  --ag-spacing: 6px;
-  --ag-border-radius: 2px;
-  --ag-row-height: 36px;
-  --ag-header-height: 36px;
-  --ag-font-size: 13px;
-  --ag-font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --ag-background-color: var(--color-surface);
-  --ag-foreground-color: var(--color-text);
-  --ag-border-color: var(--color-border);
-  --ag-header-background-color: var(--color-surface-muted);
-  --ag-row-hover-color: var(--color-surface-hover);
-  --ag-selected-row-background-color: var(--accent-subtle);
-  --ag-accent-color: var(--accent);
-  --ag-cell-horizontal-padding: 10px;
-  --ag-card-shadow: none;
-  --ag-popup-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  --ag-row-border: true;
-  --ag-column-border: false;
-  --ag-header-column-separator-display: block;
-  --ag-header-column-separator-color: var(--color-border);
-}
-```
-
-**Using the Theming API (in `<script setup>`):**
-
-```ts
-import { themeQuartz } from 'ag-grid-community'
-
-const gridTheme = themeQuartz.withParams({
-  spacing: 6,
-  borderRadius: 2,
-  rowHeight: 36,
-  headerHeight: 36,
-  fontSize: 13,
-  accentColor: '#4F46E5',
-  backgroundColor: '#ffffff',
-  foregroundColor: '#111827',
-  borderColor: '#e5e7eb',
-  headerBackgroundColor: '#f9fafb',
-  rowHoverColor: '#f3f4f6',
-  selectedRowBackgroundColor: '#ede9fe',
-  cardShadow: false,
-  columnBorder: false,
-  rowBorder: true,
-})
-```
-
-**AG Grid class overrides** (target `.ag-` class names for fine-grained control):
+**Required overrides**, scoped inside the component's own `&-wrapper` (or equivalent) selector:
 
 ```scss
-.ag-header-cell-text {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
-}
+.grid-view-wrapper {
+  :deep(.v-data-table) {
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+  }
 
-.ag-cell {
-  display: flex;
-  align-items: center;
-}
+  :deep(.v-data-table__th) {
+    background: var(--color-surface-muted);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+  }
 
-.ag-checkbox-input-wrapper {
-  border-radius: 2px;
+  :deep(tbody tr) {
+    cursor: pointer;
+
+    &:hover {
+      background: var(--color-surface-hover);
+    }
+  }
+
+  :deep(.v-data-table__td),
+  :deep(.v-data-table__th) {
+    border-color: var(--color-border) !important;
+  }
 }
 ```
 
-**Safe to change:** margins, paddings, sizes, colors, fonts, borders.
-**Do NOT change:** `position`, `overflow`, `pointer-events`, `display` on major layout containers.
+**Row clicks:** `v-data-table` has no `@click:row` event — wire row interactivity through the `row-props` prop, a function receiving `{ item, index, internalItem }` and returning props (typically just `{ onClick: () => ... }`) to spread onto that row's `<tr>`.
+
+**Cell formatting:** use named item slots (`#[\`item.<key>\`]="{ value }"`, bracket syntax required because the key contains a dot) for anything beyond a raw field value — e.g. joining an array field into a comma-separated string.
+
+**Safe to change:** margins, paddings, sizes, colors, fonts, borders via `:deep()`.
+**Do NOT change:** `position`, `overflow`, `pointer-events`, `display` on Vuetify's internal layout wrappers (`.v-table__wrapper`, etc.).
 
 ### Status Badges
 

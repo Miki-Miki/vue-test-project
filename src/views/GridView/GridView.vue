@@ -1,13 +1,5 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community'
-import type {
-  ColDef,
-  ValueFormatterParams,
-  ValueGetterParams,
-  RowClickedEvent,
-} from 'ag-grid-community'
-import { AgGridVue } from 'ag-grid-vue3'
 import { useDiscogsStore } from '@/stores/discogs'
 import { SearchMode } from '@/types/search'
 import type { SearchResult } from '@/types/search'
@@ -15,7 +7,11 @@ import { rankResults, rankByPopularity } from '@/utils/relevance'
 import { useSearchQuery } from '@/composables/useSearchQuery'
 import DetailPanel from '@/components/DetailPanel/DetailPanel.vue'
 
-ModuleRegistry.registerModules([AllCommunityModule])
+interface DataTableHeader {
+  title: string
+  key: string
+  width?: string
+}
 
 const store = useDiscogsStore()
 const { searchByCommand } = useSearchQuery()
@@ -26,24 +22,24 @@ const rowData = computed(() =>
 )
 const selectedRow = ref<SearchResult | null>(null)
 
-const joinArray = (params: ValueFormatterParams) =>
-  Array.isArray(params.value) ? params.value.join(', ') : (params.value ?? '')
-
-const colDefs: ColDef<SearchResult>[] = [
-  { field: 'title', width: 350 },
-  { field: 'type' },
-  { field: 'year' },
-  { field: 'country' },
-  { field: 'genre', valueFormatter: joinArray },
-  { field: 'style', valueFormatter: joinArray },
-  {
-    headerName: 'Want',
-    valueGetter: (params: ValueGetterParams<SearchResult>) => params.data?.community?.want,
-  },
+const headers: DataTableHeader[] = [
+  { title: 'Title', key: 'title', width: '350px' },
+  { title: 'Type', key: 'type' },
+  { title: 'Year', key: 'year' },
+  { title: 'Country', key: 'country' },
+  { title: 'Genre', key: 'genre' },
+  { title: 'Style', key: 'style' },
+  { title: 'Want', key: 'community.want' },
 ]
 
-function onRowClicked(event: RowClickedEvent<SearchResult>) {
-  selectedRow.value = selectedRow.value?.id === event.data?.id ? null : (event.data ?? null)
+const joinArray = (value: unknown) => (Array.isArray(value) ? value.join(', ') : (value ?? ''))
+
+function onRowClicked(item: SearchResult) {
+  selectedRow.value = selectedRow.value?.id === item.id ? null : item
+}
+
+function rowProps({ item }: { item: SearchResult }) {
+  return { onClick: () => onRowClicked(item) }
 }
 
 function onCommandSelect(mode: SearchMode, value: string) {
@@ -57,12 +53,16 @@ function onCommandSelect(mode: SearchMode, value: string) {
     <p v-if="rowData.length === 0" class="grid-view-empty">Run a search to populate the grid.</p>
     <template v-else>
       <div class="grid-view-wrapper">
-        <AgGridVue
-          :rowData="rowData"
-          :columnDefs="colDefs"
-          style="width: 100%; height: 100%"
-          @row-clicked="onRowClicked"
-        />
+        <v-data-table
+          :items="rowData"
+          :headers="headers"
+          :row-props="rowProps"
+          item-value="id"
+          density="compact"
+        >
+          <template #[`item.genre`]="{ value }">{{ joinArray(value) }}</template>
+          <template #[`item.style`]="{ value }">{{ joinArray(value) }}</template>
+        </v-data-table>
       </div>
       <DetailPanel
         v-if="selectedRow"

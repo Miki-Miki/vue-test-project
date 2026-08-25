@@ -42,17 +42,6 @@
   --radius-sm: 2px; /* Default for inputs, buttons, grid cells */
   --radius-md: 4px; /* Badges, small cards */
   --radius-lg: 6px; /* Filter tabs container, modals */
-
-  /* ─── AG Grid static ──────────────────────────────────────── */
-  --ag-spacing: 6px;
-  --ag-border-radius: 2px;
-  --ag-row-height: 36px;
-  --ag-header-height: 36px;
-  --ag-font-size: 13px;
-  --ag-font-family: var(--font-family);
-  --ag-accent-color: var(--accent);
-  --ag-cell-horizontal-padding: 10px;
-  --ag-card-shadow: none;
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -100,16 +89,6 @@
 
   /* ─── Accent contextual ─────────────────────────────────── */
   --accent-subtle-bg: #ede9fe;
-
-  /* ─── AG Grid theme overrides ───────────────────────────── */
-  --ag-background-color: var(--color-surface);
-  --ag-foreground-color: var(--color-text);
-  --ag-border-color: var(--color-border);
-  --ag-header-background-color: var(--color-surface-muted);
-  --ag-row-hover-color: var(--color-surface-hover);
-  --ag-selected-row-background-color: var(--accent-subtle-bg);
-  --ag-popup-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --ag-header-column-separator-color: var(--color-border);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -157,16 +136,6 @@
 
   /* ─── Accent contextual ─────────────────────────────────── */
   --accent-subtle-bg: #2e1065;
-
-  /* ─── AG Grid theme overrides ───────────────────────────── */
-  --ag-background-color: var(--color-surface);
-  --ag-foreground-color: var(--color-text);
-  --ag-border-color: var(--color-border);
-  --ag-header-background-color: var(--color-surface-muted);
-  --ag-row-hover-color: var(--color-surface-hover);
-  --ag-selected-row-background-color: var(--accent-subtle-bg);
-  --ag-popup-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --ag-header-column-separator-color: var(--color-border);
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -205,14 +174,5 @@
     --status-danger-text: #fca5a5;
 
     --accent-subtle-bg: #2e1065;
-
-    --ag-background-color: var(--color-surface);
-    --ag-foreground-color: var(--color-text);
-    --ag-border-color: var(--color-border);
-    --ag-header-background-color: var(--color-surface-muted);
-    --ag-row-hover-color: var(--color-surface-hover);
-    --ag-selected-row-background-color: var(--accent-subtle-bg);
-    --ag-popup-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    --ag-header-column-separator-color: var(--color-border);
   }
 }

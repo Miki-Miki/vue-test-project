@@ -7,7 +7,37 @@
   &-wrapper {
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow: auto;
+
+    // Vuetify's internal DOM — no classes to hook into from the template (rule 6 exception).
+    :deep(.v-data-table) {
+      background: var(--color-surface);
+      color: var(--color-text);
+      font-family: var(--font-family);
+      font-size: var(--font-size-base);
+    }
+
+    :deep(.v-data-table__th) {
+      background: var(--color-surface-muted);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text-muted);
+    }
+
+    :deep(tbody tr) {
+      cursor: pointer;
+
+      &:hover {
+        background: var(--color-surface-hover);
+      }
+    }
+
+    :deep(.v-data-table__td),
+    :deep(.v-data-table__th) {
+      border-color: var(--color-border) !important;
+    }
   }
 
   &-empty {

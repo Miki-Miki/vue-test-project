@@ -15,7 +15,7 @@ The single biggest determinant of whether a test is trustworthy or a false posit
 
 - **Pinia stores: keep them real.** Use `setActivePinia(createPinia())` and exercise the actual store instance. Only mock a store's action with `jest.spyOn(store, 'action')` when you need to assert a call site — never replace the whole store with a hand-built object matching a shape you invented.
 - **Composables that hit the network** (`useDiscogsAuth`, etc.): mock `global.fetch`, not the composable itself. When a component/view consumes the composable, the mock's returned shape (refs, functions) must match the real composable's return signature exactly — check the source file, don't guess it.
-- **Heavy third-party UI** (AG Grid): stub the wrapper component (e.g. `AgGridVue`) at the `rowData`/`columnDefs`-in, `@row-clicked`-out boundary. Don't stub away the logic under test — column `valueFormatter`/`valueGetter` functions should still be invoked for real, either through the stub or by calling them directly as plain functions.
+- **Heavy third-party UI** (Vuetify's `v-data-table`): stub the wrapper component (`VDataTable`) at the `items`/`headers`-in boundary. Row-click behavior is wired through the `row-props` function prop (not an emitted event) — invoke the stub's `rowProps` prop directly with `{ item }` and call the returned `onClick`. Don't stub away the logic under test — item slots that format/derive cell values should still render for real, asserted against the rendered text rather than by calling a formatter function in isolation.
 - Never mock `localStorage`/`sessionStorage` — jsdom provides a real implementation; use it and let `src/test/setup.ts`'s `afterEach` clear it between tests.
 
 Before writing assertions against a mock, open the real source file it stands in for and confirm the mock's fields/return values match. A mock that drifts from its real counterpart is the most common way generated tests silently stop meaning anything.
@@ -46,7 +46,7 @@ These files are strong reference templates — copy their patterns rather than t
 
 - `src/components/__tests__/SearchBar.spec.ts` — async store-integrated component, every branch of the request lifecycle (empty-guard, loading, success, HTTP error, thrown exception) against real Pinia state.
 - `src/components/__tests__/DetailPanel.spec.ts` — pure prop-driven component, no mocking needed, all `v-if`/`??`/`?.` branches covered.
-- `src/views/__tests__/GridView.spec.ts` — AG Grid stubbed at the right altitude, column formatter/getter functions invoked directly.
+- `src/views/__tests__/GridView.spec.ts` — Vuetify's `v-data-table` stubbed at the right altitude, row selection driven through the `row-props` stub rather than a fabricated click event.
 - `src/stores/__tests__/searchHistory.spec.ts` — real localStorage round-trip, cross-store side effects, sequential `Date.now` mock.
 - `src/composables/__tests__/useDiscogsAuth.spec.ts` — `fetch` mocked at the network boundary, module state reset per test via `jest.resetModules()`.
 
