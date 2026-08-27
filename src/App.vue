@@ -20,12 +20,12 @@ onMounted(() => {
       window.matchMedia('(prefers-color-scheme: dark)').matches)
 })
 
-function toggleTheme() {
+function handleThemeToggle() {
   isDark.value = !isDark.value
   document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
 }
 
-function onCommandSelect(mode: SearchMode, value: string) {
+function handleCommandSelect(mode: SearchMode, value: string) {
   close()
   void searchByCommand(mode, value)
 }
@@ -43,7 +43,7 @@ function onCommandSelect(mode: SearchMode, value: string) {
         <button
           class="app-nav-theme-toggle"
           :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
-          @click="toggleTheme"
+          @click="handleThemeToggle"
         >
           <svg
             v-if="isDark"
@@ -92,7 +92,7 @@ function onCommandSelect(mode: SearchMode, value: string) {
     v-if="selectedResult"
     :result="selectedResult"
     @close="close"
-    @command-select="onCommandSelect"
+    @command-select="handleCommandSelect"
   />
 </template>
 

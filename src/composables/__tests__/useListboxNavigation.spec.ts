@@ -29,36 +29,36 @@ describe('useListboxNavigation', () => {
 
   it('ArrowDown/ArrowUp move the highlight and wrap around', async () => {
     const items = ref(['a', 'b', 'c'])
-    const { highlightedIndex, open, onKeydown } = useListboxNavigation(items, jest.fn())
+    const { highlightedIndex, open, handleKeydown } = useListboxNavigation(items, jest.fn())
     open()
 
-    await onKeydown(keydown('ArrowDown'))
+    await handleKeydown(keydown('ArrowDown'))
     expect(highlightedIndex.value).toBe(0)
-    await onKeydown(keydown('ArrowDown'))
-    await onKeydown(keydown('ArrowDown'))
+    await handleKeydown(keydown('ArrowDown'))
+    await handleKeydown(keydown('ArrowDown'))
     expect(highlightedIndex.value).toBe(2)
-    await onKeydown(keydown('ArrowDown'))
+    await handleKeydown(keydown('ArrowDown'))
     expect(highlightedIndex.value).toBe(0)
 
-    await onKeydown(keydown('ArrowUp'))
+    await handleKeydown(keydown('ArrowUp'))
     expect(highlightedIndex.value).toBe(2)
   })
 
   it('ignores arrow keys while closed', async () => {
     const items = ref(['a', 'b'])
-    const { highlightedIndex, onKeydown } = useListboxNavigation(items, jest.fn())
+    const { highlightedIndex, handleKeydown } = useListboxNavigation(items, jest.fn())
 
-    await onKeydown(keydown('ArrowDown'))
+    await handleKeydown(keydown('ArrowDown'))
     expect(highlightedIndex.value).toBe(-1)
   })
 
   it('Escape closes and resets the highlight', async () => {
     const items = ref(['a', 'b'])
-    const { isOpen, highlightedIndex, open, onKeydown } = useListboxNavigation(items, jest.fn())
+    const { isOpen, highlightedIndex, open, handleKeydown } = useListboxNavigation(items, jest.fn())
     open()
     highlightedIndex.value = 1
 
-    await onKeydown(keydown('Escape'))
+    await handleKeydown(keydown('Escape'))
     expect(isOpen.value).toBe(false)
     expect(highlightedIndex.value).toBe(-1)
   })
@@ -66,11 +66,11 @@ describe('useListboxNavigation', () => {
   it('Enter with a highlighted item closes the list and calls onSelect with that item', async () => {
     const items = ref(['a', 'b', 'c'])
     const onSelect = jest.fn()
-    const { isOpen, open, highlightedIndex, onKeydown } = useListboxNavigation(items, onSelect)
+    const { isOpen, open, highlightedIndex, handleKeydown } = useListboxNavigation(items, onSelect)
     open()
     highlightedIndex.value = 1
 
-    await onKeydown(keydown('Enter'))
+    await handleKeydown(keydown('Enter'))
     expect(onSelect).toHaveBeenCalledWith('b')
     expect(isOpen.value).toBe(false)
   })
@@ -79,10 +79,10 @@ describe('useListboxNavigation', () => {
     const items = ref(['a', 'b'])
     const onSelect = jest.fn()
     const onFallbackEnter = jest.fn()
-    const { isOpen, open, onKeydown } = useListboxNavigation(items, onSelect)
+    const { isOpen, open, handleKeydown } = useListboxNavigation(items, onSelect)
     open()
 
-    await onKeydown(keydown('Enter'), onFallbackEnter)
+    await handleKeydown(keydown('Enter'), onFallbackEnter)
     expect(onSelect).not.toHaveBeenCalled()
     expect(onFallbackEnter).toHaveBeenCalledTimes(1)
     expect(isOpen.value).toBe(false)
@@ -101,9 +101,9 @@ describe('useListboxNavigation', () => {
 
   it('resets the highlight when the items list changes', async () => {
     const items = ref(['a', 'b', 'c'])
-    const { highlightedIndex, open, onKeydown } = useListboxNavigation(items, jest.fn())
+    const { highlightedIndex, open, handleKeydown } = useListboxNavigation(items, jest.fn())
     open()
-    await onKeydown(keydown('ArrowDown'))
+    await handleKeydown(keydown('ArrowDown'))
     expect(highlightedIndex.value).toBe(0)
 
     items.value = ['x', 'y']

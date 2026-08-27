@@ -17,7 +17,7 @@ interface DataTableHeader {
 }
 
 const store = useDiscogsStore()
-const { toggle } = useDetailPanel()
+const { handleDetailPanelToggle } = useDetailPanel()
 const rowData = computed(() =>
   store.lastSearchMode === SearchMode.Track
     ? rankResults(store.lastQuery, store.results)
@@ -36,12 +36,12 @@ const headers: DataTableHeader[] = [
 
 const joinArray = (value: unknown) => (Array.isArray(value) ? value.join(', ') : (value ?? ''))
 
-function onRowClicked(item: SearchResult) {
-  toggle(item)
+function handleRowClick(item: SearchResult) {
+  handleDetailPanelToggle(item)
 }
 
 function rowProps({ item }: { item: SearchResult }) {
-  return { onClick: () => onRowClicked(item) }
+  return { onClick: () => handleRowClick(item) }
 }
 </script>
 

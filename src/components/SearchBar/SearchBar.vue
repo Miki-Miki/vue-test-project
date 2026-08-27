@@ -12,18 +12,22 @@ const placeholder = computed(
   () => `Search artists, releases, labels… or ${SEARCH_COMMANDS.map((c) => c.example).join(', ')}`,
 )
 
-const { isOpen, highlightedIndex, open, close, select, onKeydown } = useListboxNavigation(
-  suggestions,
-  selectSuggestion,
-)
+const {
+  isOpen,
+  highlightedIndex,
+  open,
+  close,
+  select,
+  handleKeydown: handleListboxKeydown,
+} = useListboxNavigation(suggestions, selectSuggestion)
 
-async function onSearchClick(): Promise<void> {
+async function handleSearchClick(): Promise<void> {
   close()
   await search()
 }
 
-function handleKeydown(event: KeyboardEvent): Promise<void> {
-  return onKeydown(event, search)
+function handleSearchKeydown(event: KeyboardEvent): Promise<void> {
+  return handleListboxKeydown(event, search)
 }
 </script>
 
@@ -40,10 +44,14 @@ function handleKeydown(event: KeyboardEvent): Promise<void> {
         aria-autocomplete="list"
         :aria-expanded="isOpen && suggestions.length > 0"
         @input="open"
-        @keydown="handleKeydown"
+        @keydown="handleSearchKeydown"
         @blur="close"
       />
-      <button class="search-bar-controls-button" :disabled="!authenticated || loading" @click="onSearchClick">
+      <button
+        class="search-bar-controls-button"
+        :disabled="!authenticated || loading"
+        @click="handleSearchClick"
+      >
         {{ loading ? '…' : 'Search' }}
       </button>
       <ul v-if="isOpen && suggestions.length > 0" class="search-bar-suggestions" role="listbox">

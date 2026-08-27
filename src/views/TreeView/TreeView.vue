@@ -13,7 +13,7 @@ const TOP_N = 10
 
 const { authenticated } = useDiscogsAuth()
 const historyStore = useSearchHistoryStore()
-const { toggle } = useDetailPanel()
+const { handleDetailPanelToggle } = useDetailPanel()
 
 const activeSession = computed(() =>
   historyStore.sessions.find((s) => s.id === historyStore.activeSessionId),
@@ -28,8 +28,14 @@ const cards = computed(
     })) ?? [],
 )
 
-function onSelect(result: SearchResult) {
-  toggle(result)
+function handleResultSelect(result: SearchResult) {
+  handleDetailPanelToggle(result)
+}
+
+function handleOnWheel(event: WheelEvent) {
+  if (event.deltaY === 0) return
+  event.preventDefault()
+  ;(event.currentTarget as HTMLElement).scrollLeft += event.deltaY
 }
 </script>
 
@@ -41,7 +47,7 @@ function onSelect(result: SearchResult) {
       <p v-if="cards.length === 0" class="tree-view-empty">
         Search a style, genre, or song to start exploring.
       </p>
-      <div v-else class="tree-view-wrapper">
+      <div v-else class="tree-view-wrapper" @wheel="handleOnWheel">
         <div class="tree-view-stack">
           <ResultsScrollCard
             class="tree-view-stack-item"
@@ -49,7 +55,7 @@ function onSelect(result: SearchResult) {
             :key="card.id"
             :query="card.query"
             :results="card.results"
-            @select="onSelect"
+            @select="handleResultSelect"
           />
 
           <SuggestionPicker class="tree-view-stack-item" />

@@ -36,7 +36,7 @@ export function useListboxNavigation<T>(
    * (dropdown closed, or open with nothing selected) — e.g. submitting the
    * underlying input's own action instead of picking a suggestion.
    */
-  async function onKeydown(event: KeyboardEvent, onFallbackEnter?: () => void | Promise<void>): Promise<void> {
+  async function handleKeydown(event: KeyboardEvent, onFallbackEnter?: () => void | Promise<void>): Promise<void> {
     const hasItems = isOpen.value && items.value.length > 0
 
     if (event.key === 'ArrowDown' && hasItems) {
@@ -58,5 +58,5 @@ export function useListboxNavigation<T>(
     }
   }
 
-  return { isOpen, highlightedIndex, open, close, select, onKeydown }
+  return { isOpen, highlightedIndex, open, close, select, handleKeydown }
 }

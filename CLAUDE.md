@@ -18,6 +18,10 @@ Vue 3 + Vite + TypeScript SPA for searching the Discogs music database: a chat-s
 
 Generic/reusable components (results grid, detail panel, etc.) must not carry provider-specific names in their types, props, or internal variables — see [.claude/rules/component-naming.md](.claude/rules/component-naming.md) (always in effect). Provider-specific naming is reserved for the actual integration layer (`src/stores/discogs.ts`, `useDiscogsAuth.ts`, `plugins/discogs-oauth.ts`).
 
+## Handler function naming
+
+Event handler functions (user interactions, emitted component events, DOM events) must be prefixed with `handle` and named for what they handle, in as few words as possible — see [.claude/rules/handler-naming.md](.claude/rules/handler-naming.md) (always in effect). `toggle(result)` should be `handleDetailPanelToggle(result)`; `onWheel` should be `handleOnWheel`.
+
 ## Discogs API feature work
 
 Before touching Discogs search, auth, or the results grid — `src/views/SearchView.vue`, `src/views/GridView.vue`, `src/stores/discogs.ts`, `src/composables/useDiscogsAuth.ts`, `src/composables/useSearchQuery.ts`, `src/utils/searchCommand.ts`, `src/api/discogs/`, or `plugins/discogs-oauth.ts` — read [docs/discogs-api.md](docs/discogs-api.md) first. It covers the API base URL, the User-Agent proxy workaround, rate limits, the OAuth 1.0a flow, endpoints, and response schemas.
@@ -38,7 +42,8 @@ End-to-end / browser-driven testing (launching a dev server, driving a real or h
 ├── settings.local.json     # personal/machine overrides — gitignored, do not rely on it for team behavior
 ├── rules/                  # always-loaded structural rules, injected alongside CLAUDE.md
 │   ├── styling-structure.md # selector naming, ITCSS layout, component-folder convention
-│   └── component-naming.md # generic vs. provider-specific naming for components/types/variables
+│   ├── component-naming.md # generic vs. provider-specific naming for components/types/variables
+│   └── handler-naming.md   # `handle`-prefixed, subject-describing names for event handler functions
 ├── agents/                 # subagents: focused, tool-scoped workers for specific jobs
 │   └── ui-designer.md      # turns a submitted UI screenshot into Vue components matching the design system
 └── skills/                 # skills: on-demand instructions Claude loads only when relevant/invoked

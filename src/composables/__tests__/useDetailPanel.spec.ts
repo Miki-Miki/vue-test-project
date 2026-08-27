@@ -37,22 +37,22 @@ describe('useDetailPanel', () => {
     expect(useDetailPanel().selectedResult.value).toBeNull()
   })
 
-  it('toggle() opens a result when nothing is selected', () => {
-    useDetailPanel().toggle(resultA)
+  it('handleDetailPanelToggle() opens a result when nothing is selected', () => {
+    useDetailPanel().handleDetailPanelToggle(resultA)
     expect(useDetailPanel().selectedResult.value).toEqual(resultA)
   })
 
-  it('toggle() closes the panel when the same result is toggled again', () => {
-    const { toggle } = useDetailPanel()
-    toggle(resultA)
-    toggle(resultA)
+  it('handleDetailPanelToggle() closes the panel when the same result is toggled again', () => {
+    const { handleDetailPanelToggle } = useDetailPanel()
+    handleDetailPanelToggle(resultA)
+    handleDetailPanelToggle(resultA)
     expect(useDetailPanel().selectedResult.value).toBeNull()
   })
 
-  it('toggle() switches to a different result without closing', () => {
-    const { toggle } = useDetailPanel()
-    toggle(resultA)
-    toggle(resultB)
+  it('handleDetailPanelToggle() switches to a different result without closing', () => {
+    const { handleDetailPanelToggle } = useDetailPanel()
+    handleDetailPanelToggle(resultA)
+    handleDetailPanelToggle(resultB)
     expect(useDetailPanel().selectedResult.value).toEqual(resultB)
   })
 

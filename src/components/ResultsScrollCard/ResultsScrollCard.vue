@@ -11,7 +11,7 @@ const emit = defineEmits<{
   select: [result: SearchResult]
 }>()
 
-function onLoad({ done }: { done: (status: 'ok' | 'error' | 'empty' | 'loading') => void }) {
+function handleLoad({ done }: { done: (status: 'ok' | 'error' | 'empty' | 'loading') => void }) {
   done('empty')
 }
 </script>
@@ -27,7 +27,7 @@ function onLoad({ done }: { done: (status: 'ok' | 'error' | 'empty' | 'loading')
       class="results-scroll-card-list"
       mode="manual"
       empty-text="End of results"
-      @load="onLoad"
+      @load="handleLoad"
     >
       <div
         v-for="item in results"

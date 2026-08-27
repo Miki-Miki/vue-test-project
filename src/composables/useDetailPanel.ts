@@ -12,9 +12,9 @@ export function useDetailPanel() {
     selectedResult.value = null
   }
 
-  function toggle(result: SearchResult) {
+  function handleDetailPanelToggle(result: SearchResult) {
     selectedResult.value = selectedResult.value?.id === result.id ? null : result
   }
 
-  return { selectedResult, open, close, toggle }
+  return { selectedResult, open, close, handleDetailPanelToggle }
 }
