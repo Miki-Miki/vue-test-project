@@ -30,3 +30,8 @@ export interface SearchPagination {
   page: number
   items: number
 }
+
+export interface SearchSuggestion {
+  mode: SearchMode
+  value: string
+}

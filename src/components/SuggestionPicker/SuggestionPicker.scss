@@ -12,5 +12,16 @@
     width: 100%;
     justify-content: center;
     opacity: 0.5;
+
+    &-skeleton {
+      height: 27px;
+      cursor: default;
+    }
+  }
+
+  &-error {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    text-align: center;
   }
 }

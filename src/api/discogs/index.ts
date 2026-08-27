@@ -1,3 +1,4 @@
 export * from './client'
 export * from './search'
 export * from './auth'
+export * from './suggestions'

@@ -26,6 +26,10 @@ Event handler functions (user interactions, emitted component events, DOM events
 
 Before touching Discogs search, auth, or the results grid — `src/views/SearchView.vue`, `src/views/GridView.vue`, `src/stores/discogs.ts`, `src/composables/useDiscogsAuth.ts`, `src/composables/useSearchQuery.ts`, `src/utils/searchCommand.ts`, `src/api/discogs/`, or `plugins/discogs-oauth.ts` — read [docs/discogs-api.md](docs/discogs-api.md) first. It covers the API base URL, the User-Agent proxy workaround, rate limits, the OAuth 1.0a flow, endpoints, and response schemas.
 
+## Claude-generated suggestions feature work
+
+Before touching the Tree view's next-search suggestions — `plugins/claude-proxy.ts`, `src/api/claude/`, `src/api/discogs/suggestions.ts`, `src/composables/useSearchSuggestions.ts`, or `src/components/SuggestionPicker/` — read [docs/claude-suggestions.md](docs/claude-suggestions.md) first. It covers the `/api/claude/messages` proxy contract, the suggestion prompt/tool schema, and how a clicked suggestion wires back into `useSearchQuery`.
+
 ## Writing tests
 
 Before writing or generating new unit tests, or extending existing ones under any `__tests__/` directory, read [docs/testing-conventions.md](docs/testing-conventions.md) first. It covers where to mock (and where not to), which failure/edge paths must be paired with happy-path tests, how to control non-determinism like `Date.now()`, and which existing spec files are strong templates to copy vs. which ones not to imitate.

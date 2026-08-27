@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useSearchHistoryStore } from '@/stores/searchHistory'
 import { useDiscogsAuth } from '@/composables/useDiscogsAuth'
 import { useDetailPanel } from '@/composables/useDetailPanel'
-import type { SearchResult } from '@/types/search'
+import { useSearchQuery } from '@/composables/useSearchQuery'
+import { useSearchSuggestions } from '@/composables/useSearchSuggestions'
+import type { SearchMode, SearchResult } from '@/types/search'
 import { rankByPopularity } from '@/utils/relevance'
 import ResultsScrollCard from '@/components/ResultsScrollCard/ResultsScrollCard.vue'
 import AuthPrompt from '@/components/AuthPrompt/AuthPrompt.vue'
@@ -14,6 +16,13 @@ const TOP_N = 10
 const { authenticated } = useDiscogsAuth()
 const historyStore = useSearchHistoryStore()
 const { handleDetailPanelToggle } = useDetailPanel()
+const { searchByCommand } = useSearchQuery()
+const {
+  suggestions,
+  loading: suggestionsLoading,
+  error: suggestionsError,
+  refresh: refreshSuggestions,
+} = useSearchSuggestions()
 
 const activeSession = computed(() =>
   historyStore.sessions.find((s) => s.id === historyStore.activeSessionId),
@@ -28,8 +37,26 @@ const cards = computed(
     })) ?? [],
 )
 
+const searchHistoryQueries = computed(() => activeSession.value?.searches.map((s) => s.query) ?? [])
+
+watch(
+  searchHistoryQueries,
+  (history) => {
+    if (history.length) void refreshSuggestions(history)
+  },
+  { immediate: true },
+)
+
 function handleResultSelect(result: SearchResult) {
   handleDetailPanelToggle(result)
+}
+
+function handleSuggestionSelect(mode: SearchMode, value: string) {
+  void searchByCommand(mode, value)
+}
+
+function handleSuggestionsRetry() {
+  void refreshSuggestions(searchHistoryQueries.value)
 }
 
 function handleOnWheel(event: WheelEvent) {
@@ -58,7 +85,14 @@ function handleOnWheel(event: WheelEvent) {
             @select="handleResultSelect"
           />
 
-          <SuggestionPicker class="tree-view-stack-item" />
+          <SuggestionPicker
+            class="tree-view-stack-item"
+            :suggestions="suggestions"
+            :loading="suggestionsLoading"
+            :error="suggestionsError"
+            @select="handleSuggestionSelect"
+            @retry="handleSuggestionsRetry"
+          />
         </div>
       </div>
     </template>

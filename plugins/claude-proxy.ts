@@ -1,6 +1,6 @@
 import type { Plugin } from 'vite'
 import Anthropic from '@anthropic-ai/sdk'
-import type { MessageParam } from '@anthropic-ai/sdk/resources/messages'
+import type { MessageCreateParams, MessageParam, Tool } from '@anthropic-ai/sdk/resources/messages'
 
 export interface ClaudeProxyConfig {
   apiKey: string
@@ -9,6 +9,9 @@ export interface ClaudeProxyConfig {
 
 interface ClaudeMessagesRequestBody {
   messages: MessageParam[]
+  system?: string
+  tools?: Tool[]
+  tool_choice?: MessageCreateParams['tool_choice']
 }
 
 function readRequestBody(req: import('node:http').IncomingMessage): Promise<string> {
@@ -39,6 +42,9 @@ export function claudeProxyPlugin(config: ClaudeProxyConfig): Plugin {
               model: config.model,
               max_tokens: 1024,
               messages: body.messages,
+              ...(body.system ? { system: body.system } : {}),
+              ...(body.tools ? { tools: body.tools } : {}),
+              ...(body.tool_choice ? { tool_choice: body.tool_choice } : {}),
             })
 
             res.writeHead(200, { 'Content-Type': 'application/json' })
