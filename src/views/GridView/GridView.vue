@@ -6,15 +6,10 @@ import { useDetailPanel } from '@/composables/useDetailPanel'
 import { SearchMode } from '@/types/search'
 import type { SearchResult } from '@/types/search'
 import { rankResults, rankByPopularity } from '@/utils/relevance'
+import { RESULT_TABLE_HEADERS, joinArrayField } from '@/utils/resultTable'
 import AuthPrompt from '@/components/AuthPrompt/AuthPrompt.vue'
 
 const { authenticated } = useDiscogsAuth()
-
-interface DataTableHeader {
-  title: string
-  key: string
-  width?: string
-}
 
 const store = useDiscogsStore()
 const { handleDetailPanelToggle } = useDetailPanel()
@@ -24,17 +19,7 @@ const rowData = computed(() =>
     : rankByPopularity(store.results),
 )
 
-const headers: DataTableHeader[] = [
-  { title: 'Title', key: 'title', width: '350px' },
-  { title: 'Type', key: 'type' },
-  { title: 'Year', key: 'year' },
-  { title: 'Country', key: 'country' },
-  { title: 'Genre', key: 'genre' },
-  { title: 'Style', key: 'style' },
-  { title: 'Want', key: 'community.want' },
-]
-
-const joinArray = (value: unknown) => (Array.isArray(value) ? value.join(', ') : (value ?? ''))
+const headers = RESULT_TABLE_HEADERS
 
 function handleRowClick(item: SearchResult) {
   handleDetailPanelToggle(item)
@@ -59,8 +44,8 @@ function rowProps({ item }: { item: SearchResult }) {
           item-value="id"
           density="compact"
         >
-          <template #[`item.genre`]="{ value }">{{ joinArray(value) }}</template>
-          <template #[`item.style`]="{ value }">{{ joinArray(value) }}</template>
+          <template #[`item.genre`]="{ value }">{{ joinArrayField(value) }}</template>
+          <template #[`item.style`]="{ value }">{{ joinArrayField(value) }}</template>
         </v-data-table>
       </div>
     </template>

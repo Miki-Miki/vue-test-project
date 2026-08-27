@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useSearchHistoryStore } from '@/stores/searchHistory'
 import { useDiscogsAuth } from '@/composables/useDiscogsAuth'
 import { useDetailPanel } from '@/composables/useDetailPanel'
@@ -39,6 +39,18 @@ const cards = computed(
 
 const searchHistoryQueries = computed(() => activeSession.value?.searches.map((s) => s.query) ?? [])
 
+const expandedCardId = ref<string | null>(null)
+
+function handleCardExpandToggle(cardId: string) {
+  expandedCardId.value = expandedCardId.value === cardId ? null : cardId
+}
+
+function stackItemClass(cardId: string): string {
+  return expandedCardId.value === cardId
+    ? 'tree-view-stack-item tree-view-stack-item-expanded'
+    : 'tree-view-stack-item'
+}
+
 watch(
   searchHistoryQueries,
   (history) => {
@@ -77,12 +89,14 @@ function handleOnWheel(event: WheelEvent) {
       <div v-else class="tree-view-wrapper" @wheel="handleOnWheel">
         <div class="tree-view-stack">
           <ResultsScrollCard
-            class="tree-view-stack-item"
             v-for="card in cards"
             :key="card.id"
+            :class="stackItemClass(card.id)"
             :query="card.query"
             :results="card.results"
+            :expanded="expandedCardId === card.id"
             @select="handleResultSelect"
+            @expand-toggle="handleCardExpandToggle(card.id)"
           />
 
           <SuggestionPicker

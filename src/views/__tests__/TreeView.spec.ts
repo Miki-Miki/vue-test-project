@@ -13,11 +13,10 @@ jest.mock('@/composables/useDiscogsAuth', () => ({
   useDiscogsAuth: () => ({ authenticated: mockAuthenticated, login: jest.fn(), logout: jest.fn() }),
 }))
 
-const VInfiniteScrollStub = defineComponent({
-  name: 'VInfiniteScroll',
-  props: ['mode', 'emptyText'],
-  emits: ['load'],
-  template: '<div class="v-infinite-scroll-stub"><slot /></div>',
+const VDataTableStub = defineComponent({
+  name: 'VDataTable',
+  props: ['items', 'headers', 'rowProps'],
+  template: '<div class="v-data-table-stub"></div>',
 })
 
 const results: SearchResult[] = [
@@ -40,7 +39,7 @@ const results: SearchResult[] = [
 ]
 
 function mountTreeView() {
-  return mount(TreeView, { global: { stubs: { VInfiniteScroll: VInfiniteScrollStub } } })
+  return mount(TreeView, { global: { stubs: { VDataTable: VDataTableStub } } })
 }
 
 describe('TreeView', () => {
@@ -106,6 +105,50 @@ describe('TreeView', () => {
     const cards = wrapper.findAllComponents({ name: 'ResultsScrollCard' })
     expect(cards).toHaveLength(2)
     expect(cards.map((c) => c.props('query'))).toEqual(['rock', '/genre jazz'])
+  })
+
+  it('expands a card on toggle, and collapses it again on a second toggle', async () => {
+    const historyStore = useSearchHistoryStore()
+    historyStore.addEntry('rock', {
+      results,
+      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
+    })
+
+    const wrapper = mountTreeView()
+    const card = wrapper.findComponent({ name: 'ResultsScrollCard' })
+    expect(card.props('expanded')).toBe(false)
+
+    await card.vm.$emit('expand-toggle')
+    expect(wrapper.findComponent({ name: 'ResultsScrollCard' }).props('expanded')).toBe(true)
+
+    await card.vm.$emit('expand-toggle')
+    expect(wrapper.findComponent({ name: 'ResultsScrollCard' }).props('expanded')).toBe(false)
+  })
+
+  it('collapses the previously-expanded card when a different card is expanded', async () => {
+    let current = 1_000
+    jest.spyOn(Date, 'now').mockImplementation(() => ++current)
+
+    const historyStore = useSearchHistoryStore()
+    historyStore.addEntry('rock', {
+      results,
+      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
+    })
+    historyStore.appendSearch('/genre jazz', {
+      results: [results[0]!],
+      pagination: { per_page: 1, pages: 1, page: 1, items: 1 },
+    })
+
+    const wrapper = mountTreeView()
+    const [first, second] = wrapper.findAllComponents({ name: 'ResultsScrollCard' })
+
+    await first!.vm.$emit('expand-toggle')
+    expect(wrapper.findAllComponents({ name: 'ResultsScrollCard' })[0]!.props('expanded')).toBe(true)
+    expect(wrapper.findAllComponents({ name: 'ResultsScrollCard' })[1]!.props('expanded')).toBe(false)
+
+    await second!.vm.$emit('expand-toggle')
+    expect(wrapper.findAllComponents({ name: 'ResultsScrollCard' })[0]!.props('expanded')).toBe(false)
+    expect(wrapper.findAllComponents({ name: 'ResultsScrollCard' })[1]!.props('expanded')).toBe(true)
   })
 
   it('selects a result via the card through the shared detail panel composable, deselecting on a second select', async () => {
