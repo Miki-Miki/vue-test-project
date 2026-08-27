@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useDiscogsStore } from '@/stores/discogs'
+import { useDiscogsAuth } from '@/composables/useDiscogsAuth'
 import { SearchMode } from '@/types/search'
 import type { SearchResult } from '@/types/search'
 import { rankResults, rankByPopularity } from '@/utils/relevance'
 import { useSearchQuery } from '@/composables/useSearchQuery'
 import DetailPanel from '@/components/DetailPanel/DetailPanel.vue'
+import AuthPrompt from '@/components/AuthPrompt/AuthPrompt.vue'
+
+const { authenticated } = useDiscogsAuth()
 
 interface DataTableHeader {
   title: string
@@ -50,26 +54,30 @@ function onCommandSelect(mode: SearchMode, value: string) {
 
 <template>
   <div class="grid-view">
-    <p v-if="rowData.length === 0" class="grid-view-empty">Run a search to populate the grid.</p>
+    <AuthPrompt v-if="!authenticated" />
+
     <template v-else>
-      <div class="grid-view-wrapper">
-        <v-data-table
-          :items="rowData"
-          :headers="headers"
-          :row-props="rowProps"
-          item-value="id"
-          density="compact"
-        >
-          <template #[`item.genre`]="{ value }">{{ joinArray(value) }}</template>
-          <template #[`item.style`]="{ value }">{{ joinArray(value) }}</template>
-        </v-data-table>
-      </div>
-      <DetailPanel
-        v-if="selectedRow"
-        :result="selectedRow"
-        @close="selectedRow = null"
-        @command-select="onCommandSelect"
-      />
+      <p v-if="rowData.length === 0" class="grid-view-empty">Run a search to populate the grid.</p>
+      <template v-else>
+        <div class="grid-view-wrapper">
+          <v-data-table
+            :items="rowData"
+            :headers="headers"
+            :row-props="rowProps"
+            item-value="id"
+            density="compact"
+          >
+            <template #[`item.genre`]="{ value }">{{ joinArray(value) }}</template>
+            <template #[`item.style`]="{ value }">{{ joinArray(value) }}</template>
+          </v-data-table>
+        </div>
+        <DetailPanel
+          v-if="selectedRow"
+          :result="selectedRow"
+          @close="selectedRow = null"
+          @command-select="onCommandSelect"
+        />
+      </template>
     </template>
   </div>
 </template>

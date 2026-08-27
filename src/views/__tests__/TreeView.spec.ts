@@ -1,4 +1,4 @@
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount, flushPromises } from '@vue/test-utils'
 import TreeView from '@/views/TreeView/TreeView.vue'
@@ -6,6 +6,12 @@ import { useSearchHistoryStore } from '@/stores/searchHistory'
 import { useSearchQuery } from '@/composables/useSearchQuery'
 import { SearchMode } from '@/types/search'
 import type { SearchResult } from '@/types/search'
+
+const mockAuthenticated = ref(true)
+
+jest.mock('@/composables/useDiscogsAuth', () => ({
+  useDiscogsAuth: () => ({ authenticated: mockAuthenticated, login: jest.fn(), logout: jest.fn() }),
+}))
 
 const VInfiniteScrollStub = defineComponent({
   name: 'VInfiniteScroll',
@@ -44,10 +50,24 @@ describe('TreeView', () => {
     global.fetch = jest.fn()
     window.history.pushState({}, '', '/tree')
     useSearchQuery().reset()
+    mockAuthenticated.value = true
   })
 
   afterEach(() => {
     window.history.pushState({}, '', '/')
+  })
+
+  it('shows the auth prompt and no cards when unauthenticated', () => {
+    mockAuthenticated.value = false
+    const historyStore = useSearchHistoryStore()
+    historyStore.addEntry('rock', {
+      results,
+      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
+    })
+
+    const wrapper = mountTreeView()
+    expect(wrapper.findComponent({ name: 'AuthPrompt' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'ResultsScrollCard' }).exists()).toBe(false)
   })
 
   it('shows the empty state when there is no active session', () => {

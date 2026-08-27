@@ -1,10 +1,16 @@
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { mount, flushPromises } from '@vue/test-utils'
 import GridView from '@/views/GridView/GridView.vue'
 import { useDiscogsStore } from '@/stores/discogs'
 import { SearchMode } from '@/types/search'
 import type { SearchResult } from '@/types/search'
+
+const mockAuthenticated = ref(true)
+
+jest.mock('@/composables/useDiscogsAuth', () => ({
+  useDiscogsAuth: () => ({ authenticated: mockAuthenticated, login: jest.fn(), logout: jest.fn() }),
+}))
 
 const VDataTableStub = defineComponent({
   name: 'VDataTable',
@@ -52,6 +58,19 @@ describe('GridView', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     global.fetch = jest.fn()
+    mockAuthenticated.value = true
+  })
+
+  it('shows the auth prompt and no table when unauthenticated', () => {
+    mockAuthenticated.value = false
+    useDiscogsStore().setResults({
+      results,
+      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
+    })
+    const wrapper = mountGridView()
+
+    expect(wrapper.findComponent({ name: 'AuthPrompt' }).exists()).toBe(true)
+    expect(wrapper.findComponent(VDataTableStub).exists()).toBe(false)
   })
 
   it('shows the empty state and no table when there are no results', () => {
