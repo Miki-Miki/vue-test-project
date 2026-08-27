@@ -59,6 +59,9 @@ function loadSessions(): SearchSession[] {
 export const useSearchHistoryStore = defineStore('searchHistory', () => {
   const sessions = ref<SearchSession[]>(loadSessions())
   const activeSessionId = ref<string | null>(sessions.value[0]?.id ?? null)
+  const activeSearchId = ref<string | null>(
+    sessions.value[0]?.searches[sessions.value[0].searches.length - 1]?.id ?? null,
+  )
 
   function buildSearch(
     query: string,
@@ -81,6 +84,7 @@ export const useSearchHistoryStore = defineStore('searchHistory', () => {
     const session: SearchSession = { id: search.id, timestamp: search.timestamp, searches: [search] }
     sessions.value = [session, ...sessions.value].slice(0, MAX_ENTRIES)
     activeSessionId.value = session.id
+    activeSearchId.value = search.id
     lsSet(STORAGE_KEY, sessions.value)
   }
 
@@ -97,25 +101,33 @@ export const useSearchHistoryStore = defineStore('searchHistory', () => {
     const search = buildSearch(query, data)
     activeSession.searches = [...activeSession.searches, search]
     sessions.value = [...sessions.value]
+    activeSearchId.value = search.id
     lsSet(STORAGE_KEY, sessions.value)
   }
 
-  function setActiveEntry(id: string): void {
+  function setActiveEntry(id: string, searchId?: string): void {
     const session = sessions.value.find((s) => s.id === id)
     if (!session) return
-    activeSessionId.value = id
 
-    const lastSearch = session.searches[session.searches.length - 1]!
+    const targetSearch = searchId
+      ? session.searches.find((s) => s.id === searchId)
+      : session.searches[session.searches.length - 1]
+    if (!targetSearch) return
+
+    activeSessionId.value = id
+    activeSearchId.value = targetSearch.id
+
     const discogsStore = useDiscogsStore()
     discogsStore.setResults({
-      results: lastSearch.results,
-      pagination: lastSearch.pagination ?? { per_page: 0, pages: 0, page: 1, items: 0 },
+      results: targetSearch.results,
+      pagination: targetSearch.pagination ?? { per_page: 0, pages: 0, page: 1, items: 0 },
     })
-    discogsStore.setQuery(lastSearch.query, parseSearchCommand(lastSearch.query).mode)
+    discogsStore.setQuery(targetSearch.query, parseSearchCommand(targetSearch.query).mode)
   }
 
   function startNewSession(): void {
     activeSessionId.value = null
+    activeSearchId.value = null
     const discogsStore = useDiscogsStore()
     discogsStore.setResults({
       results: [],
@@ -127,6 +139,7 @@ export const useSearchHistoryStore = defineStore('searchHistory', () => {
   function clearHistory(): void {
     sessions.value = []
     activeSessionId.value = null
+    activeSearchId.value = null
     lsRemove(STORAGE_KEY)
     const discogsStore = useDiscogsStore()
     discogsStore.setResults({
@@ -138,6 +151,7 @@ export const useSearchHistoryStore = defineStore('searchHistory', () => {
   return {
     sessions,
     activeSessionId,
+    activeSearchId,
     addEntry,
     appendSearch,
     setActiveEntry,

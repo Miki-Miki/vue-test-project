@@ -37,11 +37,11 @@ describe('SearchSessionsSidebar', () => {
     store.addEntry('floyd', { results: [], pagination: { per_page: 1, pages: 1, page: 1, items: 0 } })
 
     const wrapper = mount(SearchSessionsSidebar)
-    const items = wrapper.findAll('.search-sessions-sidebar-body-entries-entry')
+    const items = wrapper.findAll('.session-list-item')
     expect(items).toHaveLength(2)
     expect(items[0]!.text()).toContain('floyd')
-    expect(items[0]!.classes()).toContain('search-sessions-sidebar-body-entries-entry-active')
-    expect(items[1]!.classes()).not.toContain('search-sessions-sidebar-body-entries-entry-active')
+    expect(items[0]!.classes()).toContain('session-list-item-active')
+    expect(items[1]!.classes()).not.toContain('session-list-item-active')
     expect(wrapper.find('.search-sessions-sidebar-footer-clear-btn').exists()).toBe(true)
   })
 
@@ -52,7 +52,7 @@ describe('SearchSessionsSidebar', () => {
     const setActiveEntry = jest.spyOn(store, 'setActiveEntry')
 
     const wrapper = mount(SearchSessionsSidebar)
-    const secondEntry = wrapper.findAll('.search-sessions-sidebar-body-entries-entry')[1]!
+    const secondEntry = wrapper.findAll('.session-list-item')[1]!
     await secondEntry.trigger('click')
 
     expect(setActiveEntry).toHaveBeenCalledWith(store.sessions[1]!.id)
@@ -64,7 +64,7 @@ describe('SearchSessionsSidebar', () => {
     const setActiveEntry = jest.spyOn(store, 'setActiveEntry')
 
     const wrapper = mount(SearchSessionsSidebar)
-    await wrapper.find('.search-sessions-sidebar-body-entries-entry').trigger('keyup.enter')
+    await wrapper.find('.session-list-item').trigger('keyup.enter')
 
     expect(setActiveEntry).toHaveBeenCalledWith(store.sessions[0]!.id)
   })

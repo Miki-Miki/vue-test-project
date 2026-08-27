@@ -1,0 +1,112 @@
+.session-list-item {
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  transition:
+    background 150ms,
+    border-color 150ms;
+
+  &:hover {
+    background: var(--color-surface-hover);
+  }
+
+  &-active {
+    border-left-color: var(--accent);
+    background: var(--color-surface-hover);
+  }
+
+  &-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-2);
+    padding-right: var(--space-3);
+    padding-left: 5px;
+  }
+
+  &-expand-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--color-text-subtle);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  &-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  &-query {
+    font-size: var(--font-size-base);
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+  }
+
+  &-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+
+    &-count,
+    &-time {
+      font-size: var(--font-size-xs);
+      color: var(--color-text-subtle);
+    }
+  }
+
+  &-searches {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 var(--space-1);
+
+    &-search {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      padding: var(--space-1) var(--space-3) var(--space-1) calc(var(--space-3) + 16px);
+      cursor: pointer;
+      transition: background 150ms;
+
+      &:hover {
+        background: var(--color-surface-hover);
+      }
+
+      &-active {
+        background: var(--color-surface-hover);
+      }
+
+      &-query {
+        font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      &-count {
+        font-size: var(--font-size-xs);
+        color: var(--color-text-subtle);
+        flex-shrink: 0;
+      }
+    }
+
+    &-search-active &-search-query {
+      color: var(--color-text);
+    }
+  }
+}
