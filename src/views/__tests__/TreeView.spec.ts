@@ -1,10 +1,10 @@
 import { defineComponent, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import TreeView from '@/views/TreeView/TreeView.vue'
 import { useSearchHistoryStore } from '@/stores/searchHistory'
 import { useSearchQuery } from '@/composables/useSearchQuery'
-import { SearchMode } from '@/types/search'
+import { useDetailPanel } from '@/composables/useDetailPanel'
 import type { SearchResult } from '@/types/search'
 
 const mockAuthenticated = ref(true)
@@ -55,6 +55,7 @@ describe('TreeView', () => {
 
   afterEach(() => {
     window.history.pushState({}, '', '/')
+    useDetailPanel().close()
   })
 
   it('shows the auth prompt and no cards when unauthenticated', () => {
@@ -107,7 +108,7 @@ describe('TreeView', () => {
     expect(cards.map((c) => c.props('query'))).toEqual(['rock', '/genre jazz'])
   })
 
-  it('selects a result via the card, opening the detail panel, and deselects on a second select', async () => {
+  it('selects a result via the card through the shared detail panel composable, deselecting on a second select', async () => {
     const historyStore = useSearchHistoryStore()
     historyStore.addEntry('rock', {
       results,
@@ -115,43 +116,13 @@ describe('TreeView', () => {
     })
 
     const wrapper = mountTreeView()
-    expect(wrapper.findComponent({ name: 'DetailPanel' }).exists()).toBe(false)
+    expect(useDetailPanel().selectedResult.value).toBeNull()
 
     const card = wrapper.findComponent({ name: 'ResultsScrollCard' })
     await card.vm.$emit('select', results[0])
-    const panel = wrapper.findComponent({ name: 'DetailPanel' })
-    expect(panel.exists()).toBe(true)
-    expect(panel.props('result')).toEqual(results[0])
+    expect(useDetailPanel().selectedResult.value).toEqual(results[0])
 
     await card.vm.$emit('select', results[0])
-    expect(wrapper.findComponent({ name: 'DetailPanel' }).exists()).toBe(false)
-  })
-
-  it('appends a new card onto the session when a genre tag is clicked in the detail panel', async () => {
-    const historyStore = useSearchHistoryStore()
-    historyStore.addEntry('rock', {
-      results,
-      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
-    })
-    ;(global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      json: () =>
-        Promise.resolve({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
-    })
-
-    const wrapper = mountTreeView()
-    const card = wrapper.findComponent({ name: 'ResultsScrollCard' })
-    await card.vm.$emit('select', results[0])
-    const panel = wrapper.findComponent({ name: 'DetailPanel' })
-
-    await panel.vm.$emit('command-select', SearchMode.Genre, 'Grunge')
-    await flushPromises()
-
-    expect(wrapper.findComponent({ name: 'DetailPanel' }).exists()).toBe(false)
-    expect(historyStore.sessions).toHaveLength(1)
-    expect(historyStore.sessions[0]!.searches).toHaveLength(2)
-    expect(wrapper.findAllComponents({ name: 'ResultsScrollCard' })).toHaveLength(2)
+    expect(useDetailPanel().selectedResult.value).toBeNull()
   })
 })

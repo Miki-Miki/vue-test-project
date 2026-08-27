@@ -1,8 +1,9 @@
 import { defineComponent, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { mount, flushPromises } from '@vue/test-utils'
+import { mount } from '@vue/test-utils'
 import GridView from '@/views/GridView/GridView.vue'
 import { useDiscogsStore } from '@/stores/discogs'
+import { useDetailPanel } from '@/composables/useDetailPanel'
 import { SearchMode } from '@/types/search'
 import type { SearchResult } from '@/types/search'
 
@@ -59,6 +60,10 @@ describe('GridView', () => {
     setActivePinia(createPinia())
     global.fetch = jest.fn()
     mockAuthenticated.value = true
+  })
+
+  afterEach(() => {
+    useDetailPanel().close()
   })
 
   it('shows the auth prompt and no table when unauthenticated', () => {
@@ -140,26 +145,22 @@ describe('GridView', () => {
     expect(wrapper.text()).toContain('Rock, Non-Music')
   })
 
-  it('selects a row via row-props onClick and shows its detail panel, deselecting on a second click', async () => {
+  it('selects a row via row-props onClick through the shared detail panel composable, deselecting on a second click', async () => {
     useDiscogsStore().setResults({
       results,
       pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
     })
     const wrapper = mountGridView()
-    expect(wrapper.findComponent({ name: 'DetailPanel' }).exists()).toBe(false)
+    expect(useDetailPanel().selectedResult.value).toBeNull()
 
     clickRow(wrapper, results[0])
-    await wrapper.vm.$nextTick()
-    const panel = wrapper.findComponent({ name: 'DetailPanel' })
-    expect(panel.exists()).toBe(true)
-    expect(panel.props('result')).toEqual(results[0])
+    expect(useDetailPanel().selectedResult.value).toEqual(results[0])
 
     clickRow(wrapper, results[0])
-    await wrapper.vm.$nextTick()
-    expect(wrapper.findComponent({ name: 'DetailPanel' }).exists()).toBe(false)
+    expect(useDetailPanel().selectedResult.value).toBeNull()
   })
 
-  it('deselects the row when the detail panel emits close', async () => {
+  it('replaces the selected result when a different row is clicked', () => {
     useDiscogsStore().setResults({
       results,
       pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
@@ -167,63 +168,9 @@ describe('GridView', () => {
     const wrapper = mountGridView()
 
     clickRow(wrapper, results[0])
-    await wrapper.vm.$nextTick()
-    const panel = wrapper.findComponent({ name: 'DetailPanel' })
-    expect(panel.exists()).toBe(true)
+    expect(useDetailPanel().selectedResult.value).toEqual(results[0])
 
-    await panel.vm.$emit('close')
-    expect(wrapper.findComponent({ name: 'DetailPanel' }).exists()).toBe(false)
-  })
-
-  it('deselects the row and triggers a genre search when the detail panel emits command-select with Genre', async () => {
-    useDiscogsStore().setResults({
-      results,
-      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
-    })
-    ;(global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      json: () =>
-        Promise.resolve({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
-    })
-
-    const wrapper = mountGridView()
-    clickRow(wrapper, results[0])
-    await wrapper.vm.$nextTick()
-    const panel = wrapper.findComponent({ name: 'DetailPanel' })
-
-    await panel.vm.$emit('command-select', SearchMode.Genre, 'Rock')
-    await flushPromises()
-
-    expect(wrapper.findComponent({ name: 'DetailPanel' }).exists()).toBe(false)
-    expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?genre=Rock&type=release')
-    expect(useDiscogsStore().lastSearchMode).toBe(SearchMode.Genre)
-  })
-
-  it('deselects the row and triggers a style search when the detail panel emits command-select with Style', async () => {
-    useDiscogsStore().setResults({
-      results,
-      pagination: { per_page: 2, pages: 1, page: 1, items: 2 },
-    })
-    ;(global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      status: 200,
-      statusText: 'OK',
-      json: () =>
-        Promise.resolve({ results: [], pagination: { per_page: 0, pages: 0, page: 1, items: 0 } }),
-    })
-
-    const wrapper = mountGridView()
-    clickRow(wrapper, results[0])
-    await wrapper.vm.$nextTick()
-    const panel = wrapper.findComponent({ name: 'DetailPanel' })
-
-    await panel.vm.$emit('command-select', SearchMode.Style, 'Acid')
-    await flushPromises()
-
-    expect(wrapper.findComponent({ name: 'DetailPanel' }).exists()).toBe(false)
-    expect(global.fetch).toHaveBeenCalledWith('/api/discogs/database/search?style=Acid&type=release')
-    expect(useDiscogsStore().lastSearchMode).toBe(SearchMode.Style)
+    clickRow(wrapper, results[1])
+    expect(useDetailPanel().selectedResult.value).toEqual(results[1])
   })
 })

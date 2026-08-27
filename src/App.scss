@@ -1,6 +1,10 @@
 .app {
   &-content {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
   }
 
   &-nav {
@@ -58,5 +62,8 @@
   &-body {
     display: flex;
     flex-direction: row;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
 }

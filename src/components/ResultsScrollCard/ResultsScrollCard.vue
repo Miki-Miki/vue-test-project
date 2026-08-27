@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { SearchResult } from '@/types/search'
 
-defineProps<{
+const props = defineProps<{
+  class?: string
   query: string
   results: SearchResult[]
 }>()
@@ -16,7 +17,7 @@ function onLoad({ done }: { done: (status: 'ok' | 'error' | 'empty' | 'loading')
 </script>
 
 <template>
-  <div class="results-scroll-card">
+  <div :class="['results-scroll-card', props.class]">
     <header class="results-scroll-card-header">
       <span class="results-scroll-card-header-query">{{ query }}</span>
       <span class="results-scroll-card-header-count">{{ results.length }} results</span>

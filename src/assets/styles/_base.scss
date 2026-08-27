@@ -1,7 +1,8 @@
 // Base layer — bare element defaults. No classes; provider-agnostic.
 
 body {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   color: var(--color-text);
   background: var(--color-surface);
   transition:

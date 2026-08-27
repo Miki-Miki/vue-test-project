@@ -26,6 +26,10 @@ Before touching Discogs search, auth, or the results grid — `src/views/SearchV
 
 Before writing or generating new unit tests, or extending existing ones under any `__tests__/` directory, read [docs/testing-conventions.md](docs/testing-conventions.md) first. It covers where to mock (and where not to), which failure/edge paths must be paired with happy-path tests, how to control non-determinism like `Date.now()`, and which existing spec files are strong templates to copy vs. which ones not to imitate.
 
+## Testing UI changes
+
+End-to-end / browser-driven testing (launching a dev server, driving a real or headless browser, installing Playwright or similar) is done by a human, not Claude. Never attempt to spin up a browser, install browser-automation tooling, or otherwise run an e2e test for a feature — rely on type-checking, unit tests, and static reasoning about the diff instead, and say explicitly that manual/browser verification is left to the user.
+
 ## Claude Code configuration (`.claude/`)
 
 ```
