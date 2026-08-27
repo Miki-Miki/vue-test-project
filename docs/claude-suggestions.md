@@ -37,7 +37,7 @@ This is the Discogs-domain integration layer — same layer as `src/api/discogs/
 
 `suggestNextSearches(history: string[]): Promise<SearchSuggestion[]>`:
 
-1. Builds a user message containing the full `DISCOGS_GENRES`/`DISCOGS_STYLES` lists (`src/data/discogsTaxonomy.ts`) and the search history — an ordered array of raw query strings (e.g. `"/genre Electronic"`) from the active tree session, oldest to newest. The last entry is the most recent search; when there's only one entry, that single call already carries "the latest input" the feature needs on the very first suggestion request.
+1. Builds a user message containing the genre/style taxonomy — one line per value with its "vibe" description (`formatTaxonomyWithVibes`, from `src/api/discogs/taxonomyPrompt.ts`, backed by `src/data/discogsTaxonomy.ts` + `src/data/discogsTaxonomyVibes.ts`) — and the search history — an ordered array of raw query strings (e.g. `"/genre Electronic"`) from the active tree session, oldest to newest. The last entry is the most recent search; when there's only one entry, that single call already carries "the latest input" the feature needs on the very first suggestion request.
 2. Sends it with a `suggest_searches` tool (input schema: an array of exactly 3 `{mode: 'genre'|'style', value: string}` items) and `tool_choice` forced to that tool — this guarantees structured output instead of parsing free-form text.
 3. Validates the tool call's `input.suggestions`: exactly 3 items, each `mode` mapping to a real `SearchMode`, each `value` present in that mode's taxonomy array. Throws if not — callers surface this as an error state, never a silently-coerced guess.
 
@@ -62,9 +62,12 @@ Rules:
    Aim for a mix: one close/safe continuation of the last search, one adjacent but
    different branch, one that reintroduces a genre from earlier in the history
    (if any) so the user can branch back.
-5. If the history is empty or only has one entry, favor broad, well-known
+5. Prefer styles over genres when both are reasonable next picks — there are far
+   more styles than genres, and leaning on styles keeps suggestions from
+   converging on the same handful of broad genres over and over.
+6. If the history is empty or only has one entry, favor broad, well-known
    genres/styles over obscure ones so the first branches are inviting.
-6. Call `suggest_searches` with exactly 3 items. Do not respond with any text.
+7. Call `suggest_searches` with exactly 3 items. Do not respond with any text.
 ```
 
 Changing this prompt is the primary lever for suggestion quality — prefer editing the rules above over adding ad-hoc post-processing in `suggestions.ts`.

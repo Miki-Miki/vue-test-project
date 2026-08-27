@@ -26,9 +26,9 @@ Event handler functions (user interactions, emitted component events, DOM events
 
 Before touching Discogs search, auth, or the results grid — `src/views/SearchView.vue`, `src/views/GridView.vue`, `src/stores/discogs.ts`, `src/composables/useDiscogsAuth.ts`, `src/composables/useSearchQuery.ts`, `src/utils/searchCommand.ts`, `src/api/discogs/`, or `plugins/discogs-oauth.ts` — read [docs/discogs-api.md](docs/discogs-api.md) first. It covers the API base URL, the User-Agent proxy workaround, rate limits, the OAuth 1.0a flow, endpoints, and response schemas.
 
-## Claude-generated suggestions feature work
+## Claude usage (suggestions + vibe search)
 
-Before touching the Tree view's next-search suggestions — `plugins/claude-proxy.ts`, `src/api/claude/`, `src/api/discogs/suggestions.ts`, `src/composables/useSearchSuggestions.ts`, or `src/components/SuggestionPicker/` — read [docs/claude-suggestions.md](docs/claude-suggestions.md) first. It covers the `/api/claude/messages` proxy contract, the suggestion prompt/tool schema, and how a clicked suggestion wires back into `useSearchQuery`.
+Before touching anything that calls Claude — `plugins/claude-proxy.ts`, `src/api/claude/`, `src/api/discogs/taxonomyPrompt.ts`, `src/api/discogs/suggestions.ts`, `src/api/discogs/vibeSearch.ts`, `src/composables/useSearchSuggestions.ts`, `src/composables/useVibeSearch.ts`, or `src/components/SuggestionPicker/` — read [docs/claude-usage.md](docs/claude-usage.md) first for the overview (proxy contract, shared tool-use pattern, both call sites). For the Tree view's next-search suggestions specifically, [docs/claude-suggestions.md](docs/claude-suggestions.md) has the full system prompt and click-to-search wiring detail.
 
 ## Writing tests
 
