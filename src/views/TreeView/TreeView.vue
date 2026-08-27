@@ -5,8 +5,11 @@ import { useDiscogsAuth } from '@/composables/useDiscogsAuth'
 import { useDetailPanel } from '@/composables/useDetailPanel'
 import { useSearchQuery } from '@/composables/useSearchQuery'
 import { useSearchSuggestions } from '@/composables/useSearchSuggestions'
-import type { SearchMode, SearchResult } from '@/types/search'
+import { useVibeSearch } from '@/composables/useVibeSearch'
+import { SearchMode } from '@/types/search'
+import type { SearchResult } from '@/types/search'
 import { rankByPopularity } from '@/utils/relevance'
+import { parseSearchCommand } from '@/utils/searchCommand'
 import ResultsScrollCard from '@/components/ResultsScrollCard/ResultsScrollCard.vue'
 import AuthPrompt from '@/components/AuthPrompt/AuthPrompt.vue'
 import SuggestionPicker from '@/components/SuggestionPicker/SuggestionPicker.vue'
@@ -17,6 +20,7 @@ const { authenticated } = useDiscogsAuth()
 const historyStore = useSearchHistoryStore()
 const { handleDetailPanelToggle } = useDetailPanel()
 const { searchByCommand } = useSearchQuery()
+const { pickSuggestion: pickVibeSuggestion } = useVibeSearch()
 const {
   suggestions,
   loading: suggestionsLoading,
@@ -64,7 +68,14 @@ function handleResultSelect(result: SearchResult) {
 }
 
 function handleSuggestionSelect(mode: SearchMode, value: string) {
-  void searchByCommand(mode, value)
+  const firstQuery = activeSession.value?.searches[0]?.query
+  const isVibeSession = firstQuery ? parseSearchCommand(firstQuery).mode === SearchMode.Vibe : false
+
+  if (isVibeSession) {
+    void pickVibeSuggestion({ mode, value })
+  } else {
+    void searchByCommand(mode, value)
+  }
 }
 
 function handleSuggestionsRetry() {

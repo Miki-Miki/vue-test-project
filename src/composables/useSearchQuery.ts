@@ -5,6 +5,7 @@ import { useSearchHistoryStore } from '@/stores/searchHistory'
 import { discogsSearchApi } from '@/api/discogs'
 import { parseSearchCommand, formatCommand, SEARCH_COMMANDS } from '@/utils/searchCommand'
 import { DISCOGS_GENRES, DISCOGS_STYLES } from '@/data/discogsTaxonomy'
+import { useVibeSearch } from '@/composables/useVibeSearch'
 
 const SUGGESTION_LIMIT = 20
 
@@ -56,6 +57,14 @@ async function search(): Promise<void> {
 
   loading.value = true
   error.value = ''
+
+  if (parsed.mode === SearchMode.Vibe) {
+    const vibeSearch = useVibeSearch()
+    await vibeSearch.startVibeSearch(parsed.term)
+    error.value = vibeSearch.error.value
+    loading.value = false
+    return
+  }
 
   try {
     const response = await discogsSearchApi[parsed.mode](parsed.term)

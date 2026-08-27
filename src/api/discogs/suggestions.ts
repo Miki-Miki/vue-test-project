@@ -1,8 +1,8 @@
 import type { Tool } from '@anthropic-ai/sdk/resources/messages'
 import { SearchMode } from '@/types/search'
 import type { SearchSuggestion } from '@/types/search'
-import { DISCOGS_GENRES, DISCOGS_STYLES } from '@/data/discogsTaxonomy'
 import { sendMessage } from '@/api/claude/messages'
+import { formatTaxonomyWithVibes, taxonomyFor, toSearchMode } from '@/api/discogs/taxonomyPrompt'
 
 const SUGGESTION_COUNT = 3
 
@@ -48,9 +48,12 @@ Rules:
    Aim for a mix: one close/safe continuation of the last search, one adjacent but
    different branch, one that reintroduces a genre from earlier in the history
    (if any) so the user can branch back.
-5. If the history is empty or only has one entry, favor broad, well-known
+5. Prefer styles over genres when both are reasonable next picks — there are far
+   more styles than genres, and leaning on styles keeps suggestions from
+   converging on the same handful of broad genres over and over.
+6. If the history is empty or only has one entry, favor broad, well-known
    genres/styles over obscure ones so the first branches are inviting.
-6. Call \`suggest_searches\` with exactly 3 items. Do not respond with any text.`
+7. Call \`suggest_searches\` with exactly 3 items. Do not respond with any text.`
 
 interface RawSuggestion {
   mode: string
@@ -63,18 +66,10 @@ interface SuggestToolInput {
 
 function buildUserMessage(history: string[]): string {
   return [
-    `Genres: ${DISCOGS_GENRES.join(', ')}`,
-    `Styles: ${DISCOGS_STYLES.join(', ')}`,
+    `Genres (name: vibe):\n${formatTaxonomyWithVibes(SearchMode.Genre)}`,
+    `Styles (name: vibe):\n${formatTaxonomyWithVibes(SearchMode.Style)}`,
     `Search history (oldest to newest): ${JSON.stringify(history)}`,
-  ].join('\n')
-}
-
-function taxonomyFor(mode: SearchMode): readonly string[] {
-  return mode === SearchMode.Genre ? DISCOGS_GENRES : DISCOGS_STYLES
-}
-
-function toSearchMode(mode: string): SearchMode | null {
-  return mode === 'genre' ? SearchMode.Genre : mode === 'style' ? SearchMode.Style : null
+  ].join('\n\n')
 }
 
 function parseSuggestions(input: unknown): SearchSuggestion[] {

@@ -44,6 +44,13 @@ export const SEARCH_COMMANDS: readonly SearchCommandDefinition[] = [
     description: 'Search releases by style',
     example: '/style acid',
   },
+  {
+    mode: SearchMode.Vibe,
+    keyword: '/vibe',
+    label: 'Vibe',
+    description: 'Describe a listening vibe and let Claude find matching genres/styles',
+    example: '/vibe rainy day lo-fi study session',
+  },
 ]
 
 const QUOTED_VALUE = /^(["'])([\s\S]*)\1$/

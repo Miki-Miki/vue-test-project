@@ -2,6 +2,7 @@ export enum SearchMode {
   Track = 'track',
   Genre = 'genre',
   Style = 'style',
+  Vibe = 'vibe',
 }
 
 export interface SearchResult {
