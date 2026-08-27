@@ -114,6 +114,16 @@ export const useSearchHistoryStore = defineStore('searchHistory', () => {
     discogsStore.setQuery(lastSearch.query, parseSearchCommand(lastSearch.query).mode)
   }
 
+  function startNewSession(): void {
+    activeSessionId.value = null
+    const discogsStore = useDiscogsStore()
+    discogsStore.setResults({
+      results: [],
+      pagination: { per_page: 0, pages: 0, page: 1, items: 0 },
+    })
+    discogsStore.setQuery('')
+  }
+
   function clearHistory(): void {
     sessions.value = []
     activeSessionId.value = null
@@ -125,5 +135,13 @@ export const useSearchHistoryStore = defineStore('searchHistory', () => {
     })
   }
 
-  return { sessions, activeSessionId, addEntry, appendSearch, setActiveEntry, clearHistory }
+  return {
+    sessions,
+    activeSessionId,
+    addEntry,
+    appendSearch,
+    setActiveEntry,
+    startNewSession,
+    clearHistory,
+  }
 })

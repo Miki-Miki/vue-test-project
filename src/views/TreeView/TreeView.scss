@@ -1,5 +1,6 @@
 .tree-view {
   flex: 1;
+  min-width: 0;
   overflow: auto;
   padding: var(--space-4) var(--space-5);
 
@@ -9,7 +10,7 @@
 
   &-stack {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
     gap: var(--space-3);
   }

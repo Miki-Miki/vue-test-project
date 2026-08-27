@@ -1,0 +1,16 @@
+.suggestion-picker {
+  width: 320px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+
+  &-option {
+    width: 100%;
+    justify-content: center;
+    opacity: 0.5;
+  }
+}

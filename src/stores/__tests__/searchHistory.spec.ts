@@ -188,6 +188,35 @@ describe('useSearchHistoryStore', () => {
     expect(store.activeSessionId).toBe(activeBefore)
   })
 
+  it('startNewSession clears the active session and the discogs store without touching saved sessions', () => {
+    mockSequentialNow()
+    const store = useSearchHistoryStore()
+    store.addEntry('first', { results, pagination })
+
+    store.startNewSession()
+
+    expect(store.sessions).toHaveLength(1)
+    expect(store.activeSessionId).toBeNull()
+
+    const discogsStore = useDiscogsStore()
+    expect(discogsStore.results).toEqual([])
+    expect(discogsStore.lastQuery).toBe('')
+  })
+
+  it('startNewSession followed by appendSearch starts a fresh session instead of reusing the old one', () => {
+    mockSequentialNow()
+    const store = useSearchHistoryStore()
+    store.addEntry('first', { results, pagination })
+    const firstId = store.sessions[0]!.id
+
+    store.startNewSession()
+    store.appendSearch('second', { results: [], pagination })
+
+    expect(store.sessions).toHaveLength(2)
+    expect(store.sessions[0]!.id).not.toBe(firstId)
+    expect(store.activeSessionId).toBe(store.sessions[0]!.id)
+  })
+
   it('clearHistory resets state, removes from localStorage, and clears the discogs store', () => {
     mockSequentialNow()
     const store = useSearchHistoryStore()

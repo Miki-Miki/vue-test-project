@@ -1,57 +1,62 @@
-.app-nav {
-  display: flex;
-  flex-shrink: 0;
-  height: 48px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 1rem;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-surface);
+.app {
+  &-content {
+    width: 100%;
+  }
 
-  &-links {
+  &-nav {
     display: flex;
+    flex-shrink: 0;
+    height: 48px;
     align-items: center;
-    gap: 1.5rem;
+    justify-content: space-between;
+    padding: 0 1rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
 
-    &-link {
-      font-size: var(--font-size-md);
-      font-weight: 500;
+    &-links {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+
+      &-link {
+        font-size: var(--font-size-md);
+        font-weight: 500;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        transition: color 150ms;
+
+        &:hover,
+        &.router-link-active {
+          color: var(--color-text);
+        }
+      }
+    }
+
+    &-theme-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: transparent;
       color: var(--color-text-muted);
-      text-decoration: none;
-      transition: color 150ms;
+      cursor: pointer;
+      transition:
+        background 150ms,
+        color 150ms;
 
-      &:hover,
-      &.router-link-active {
+      &:hover {
+        background: var(--color-surface-hover);
         color: var(--color-text);
       }
     }
   }
 
-  &-theme-toggle {
+  &-body {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    transition:
-      background 150ms,
-      color 150ms;
-
-    &:hover {
-      background: var(--color-surface-hover);
-      color: var(--color-text);
-    }
+    flex-direction: row;
   }
-}
-
-.app-body {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
 }

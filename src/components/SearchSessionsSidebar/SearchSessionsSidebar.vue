@@ -16,11 +16,31 @@ function lastSearch(session: (typeof historyStore.sessions)[number]) {
 </script>
 
 <template>
-  <aside class="search-history-sidebar" :class="{ 'search-history-sidebar-collapsed': collapsed }">
-    <div class="search-history-sidebar-header">
-      <span v-if="!collapsed" class="search-history-sidebar-header-title">History</span>
+  <aside class="search-sessions-sidebar" :class="{ 'search-sessions-sidebar-collapsed': collapsed }">
+    <div class="search-sessions-sidebar-header">
+      <span v-if="!collapsed" class="search-sessions-sidebar-header-title">Sessions</span>
       <button
-        class="search-history-sidebar-header-collapse-btn"
+        class="search-sessions-sidebar-header-new-session-btn"
+        aria-label="New session"
+        title="New session"
+        @click="historyStore.startNewSession()"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </button>
+      <button
+        class="search-sessions-sidebar-header-collapse-btn"
         :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
         @click="collapsed = !collapsed"
       >
@@ -41,16 +61,16 @@ function lastSearch(session: (typeof historyStore.sessions)[number]) {
       </button>
     </div>
 
-    <div v-if="!collapsed" class="search-history-sidebar-body">
-      <p v-if="historyStore.sessions.length === 0" class="search-history-sidebar-body-empty">No searches yet</p>
+    <div v-if="!collapsed" class="search-sessions-sidebar-body">
+      <p v-if="historyStore.sessions.length === 0" class="search-sessions-sidebar-body-empty">No searches yet</p>
 
-      <ul v-else class="search-history-sidebar-body-entries">
+      <ul v-else class="search-sessions-sidebar-body-entries">
         <li
           v-for="session in historyStore.sessions"
           :key="session.id"
-          class="search-history-sidebar-body-entries-entry"
+          class="search-sessions-sidebar-body-entries-entry"
           :class="{
-            'search-history-sidebar-body-entries-entry-active':
+            'search-sessions-sidebar-body-entries-entry-active':
               historyStore.activeSessionId === session.id,
           }"
           role="button"
@@ -58,18 +78,18 @@ function lastSearch(session: (typeof historyStore.sessions)[number]) {
           @click="historyStore.setActiveEntry(session.id)"
           @keyup.enter="historyStore.setActiveEntry(session.id)"
         >
-          <span class="search-history-sidebar-body-entries-entry-query">{{
+          <span class="search-sessions-sidebar-body-entries-entry-query">{{
             lastSearch(session).query
           }}</span>
-          <div class="search-history-sidebar-body-entries-entry-meta">
-            <span class="search-history-sidebar-body-entries-entry-meta-count"
+          <div class="search-sessions-sidebar-body-entries-entry-meta">
+            <span class="search-sessions-sidebar-body-entries-entry-meta-count"
               >{{ lastSearch(session).results.length }} results<template
                 v-if="session.searches.length > 1"
               >
                 &middot; &times;{{ session.searches.length }} searches</template
               ></span
             >
-            <span class="search-history-sidebar-body-entries-entry-meta-time">{{
+            <span class="search-sessions-sidebar-body-entries-entry-meta-time">{{
               formatTime(session.timestamp)
             }}</span>
           </div>
@@ -77,12 +97,12 @@ function lastSearch(session: (typeof historyStore.sessions)[number]) {
       </ul>
     </div>
 
-    <div v-if="!collapsed && historyStore.sessions.length > 0" class="search-history-sidebar-footer">
-      <button class="search-history-sidebar-footer-clear-btn" @click="historyStore.clearHistory()">
+    <div v-if="!collapsed && historyStore.sessions.length > 0" class="search-sessions-sidebar-footer">
+      <button class="search-sessions-sidebar-footer-clear-btn" @click="historyStore.clearHistory()">
         Clear history
       </button>
     </div>
   </aside>
 </template>
 
-<style scoped src="./SearchHistorySidebar.scss" lang="scss"></style>
+<style scoped src="./SearchSessionsSidebar.scss" lang="scss"></style>
