@@ -1,12 +1,8 @@
 import type { Tool } from '@anthropic-ai/sdk/resources/messages'
-import { SearchMode } from '@/types/search'
-import type { SearchSuggestion } from '@/types/search'
-import { sendMessage } from '@/api/claude/messages'
-import { formatTaxonomyWithVibes, taxonomyFor, toSearchMode } from '@/api/discogs/taxonomyPrompt'
 
-const SUGGESTION_COUNT = 3
+export const SUGGESTION_COUNT = 3
 
-const SUGGEST_SEARCHES_TOOL: Tool = {
+export const SUGGEST_SEARCHES_TOOL: Tool = {
   name: 'suggest_searches',
   description: 'Propose the next 3 genre/style searches to explore.',
   input_schema: {
@@ -30,7 +26,7 @@ const SUGGEST_SEARCHES_TOOL: Tool = {
   },
 }
 
-const SYSTEM_PROMPT = `You are a music-discovery guide inside a Discogs genre/style explorer. The user
+export const SYSTEM_PROMPT = `You are a music-discovery guide inside a Discogs genre/style explorer. The user
 navigates by repeatedly picking a genre or style to search; each pick appends a
 new result set to a growing chain. Your job is to propose the 3 best *next* picks.
 
@@ -54,55 +50,3 @@ Rules:
 6. If the history is empty or only has one entry, favor broad, well-known
    genres/styles over obscure ones so the first branches are inviting.
 7. Call \`suggest_searches\` with exactly 3 items. Do not respond with any text.`
-
-interface RawSuggestion {
-  mode: string
-  value: string
-}
-
-interface SuggestToolInput {
-  suggestions: RawSuggestion[]
-}
-
-function buildUserMessage(history: string[]): string {
-  return [
-    `Genres (name: vibe):\n${formatTaxonomyWithVibes(SearchMode.Genre)}`,
-    `Styles (name: vibe):\n${formatTaxonomyWithVibes(SearchMode.Style)}`,
-    `Search history (oldest to newest): ${JSON.stringify(history)}`,
-  ].join('\n\n')
-}
-
-function parseSuggestions(input: unknown): SearchSuggestion[] {
-  const raw = input as Partial<SuggestToolInput> | undefined
-  if (!raw || !Array.isArray(raw.suggestions) || raw.suggestions.length !== SUGGESTION_COUNT) {
-    throw new Error('Claude did not return exactly 3 suggestions')
-  }
-
-  return raw.suggestions.map((suggestion) => {
-    const mode = toSearchMode(suggestion.mode)
-    if (!mode || !taxonomyFor(mode).includes(suggestion.value)) {
-      throw new Error(`Claude returned an invalid suggestion: ${JSON.stringify(suggestion)}`)
-    }
-    return { mode, value: suggestion.value }
-  })
-}
-
-export async function suggestNextSearches(history: string[]): Promise<SearchSuggestion[]> {
-  const response = await sendMessage([{ role: 'user', content: buildUserMessage(history) }], {
-    system: SYSTEM_PROMPT,
-    tools: [SUGGEST_SEARCHES_TOOL],
-    tool_choice: { type: 'tool', name: 'suggest_searches' },
-  })
-
-  if (!response.ok) {
-    const errorData = response.data as unknown as { error?: string }
-    throw new Error(errorData.error ?? `HTTP ${response.status}`)
-  }
-
-  const toolUse = response.data.content.find((block) => block.type === 'tool_use')
-  if (!toolUse || toolUse.type !== 'tool_use') {
-    throw new Error('Claude did not call suggest_searches')
-  }
-
-  return parseSuggestions(toolUse.input)
-}

@@ -1,6 +1,6 @@
 # Claude-Generated Genre/Style Suggestions – Project Reference
 
-Read this before working on: `plugins/claude-proxy.ts`, `src/api/claude/`, `src/api/discogs/suggestions.ts`, `src/composables/useSearchSuggestions.ts`, `src/components/SuggestionPicker/`.
+Read this before working on: `plugins/claude-proxy.ts`, `src/api/claude/`, `src/api/suggestions/`, `src/composables/useSearchSuggestions.ts`, `src/components/SuggestionPicker/`.
 
 ## What this is
 
@@ -31,13 +31,13 @@ The Anthropic API key must never reach the browser bundle. Same constraint and s
 
 Client-side, `src/api/claude/messages.ts`'s `sendMessage(messages, options?)` is the only thing that calls this endpoint (`src/api/claude/client.ts`'s `claudeRequest` is the generic fetch/normalize helper, mirroring `src/api/discogs/client.ts`).
 
-## Suggestion generation (`src/api/discogs/suggestions.ts`)
+## Suggestion generation (`src/api/suggestions/`)
 
-This is the Discogs-domain integration layer — same layer as `src/api/discogs/search.ts` — so it's the one place allowed to know about Discogs' taxonomy and to build a Claude prompt around it (see [.claude/rules/component-naming.md](../.claude/rules/component-naming.md)).
+`suggestionsQueries.ts` holds the exported function that actually calls Claude; `suggestionsUtils.ts` holds the user-message builder and response parsing/validation; `suggestionsConstants.ts` holds the tool schema and system prompt — the most static, least-often-touched piece, kept separate from the logic around it. This is the one place (alongside `src/api/vibeSearch/`) allowed to know about Discogs' taxonomy and build a Claude prompt around it (see [.claude/rules/component-naming.md](../.claude/rules/component-naming.md)).
 
-`suggestNextSearches(history: string[]): Promise<SearchSuggestion[]>`:
+`suggestNextSearches(history: string[]): Promise<SearchSuggestion[]>` (`suggestionsQueries.ts`):
 
-1. Builds a user message containing the genre/style taxonomy — one line per value with its "vibe" description (`formatTaxonomyWithVibes`, from `src/api/discogs/taxonomyPrompt.ts`, backed by `src/data/discogsTaxonomy.ts` + `src/data/discogsTaxonomyVibes.ts`) — and the search history — an ordered array of raw query strings (e.g. `"/genre Electronic"`) from the active tree session, oldest to newest. The last entry is the most recent search; when there's only one entry, that single call already carries "the latest input" the feature needs on the very first suggestion request.
+1. Builds a user message containing the genre/style taxonomy — one line per value with its "vibe" description (`formatTaxonomyWithVibes`, from `src/api/taxonomy/taxonomyUtils.ts`, backed by `src/data/discogsTaxonomy.ts` + `src/data/discogsTaxonomyVibes.ts`) — and the search history — an ordered array of raw query strings (e.g. `"/genre Electronic"`) from the active tree session, oldest to newest. The last entry is the most recent search; when there's only one entry, that single call already carries "the latest input" the feature needs on the very first suggestion request.
 2. Sends it with a `suggest_searches` tool (input schema: an array of exactly 3 `{mode: 'genre'|'style', value: string}` items) and `tool_choice` forced to that tool — this guarantees structured output instead of parsing free-form text.
 3. Validates the tool call's `input.suggestions`: exactly 3 items, each `mode` mapping to a real `SearchMode`, each `value` present in that mode's taxonomy array. Throws if not — callers surface this as an error state, never a silently-coerced guess.
 
@@ -70,7 +70,7 @@ Rules:
 7. Call `suggest_searches` with exactly 3 items. Do not respond with any text.
 ```
 
-Changing this prompt is the primary lever for suggestion quality — prefer editing the rules above over adding ad-hoc post-processing in `suggestions.ts`.
+Changing this prompt is the primary lever for suggestion quality — prefer editing the rules above over adding ad-hoc post-processing in `suggestionsQueries.ts`.
 
 ## `useSearchSuggestions` composable
 
@@ -91,6 +91,6 @@ await refresh(historyQueryStrings) // populates suggestions, or sets error and c
 
 - `plugins/claude-proxy.ts` → Vite dev-server plugin, forwards `messages`/`system`/`tools`/`tool_choice` to `Anthropic.messages.create`, keeps `CLAUDE_API_KEY` server-side only.
 - `src/api/claude/` → generic Claude HTTP layer (`client.ts` fetch wrapper, `messages.ts` `sendMessage`/`sendPrompt`). No Discogs knowledge here.
-- `src/api/discogs/suggestions.ts` → the prompt, tool schema, and response validation for genre/style suggestions specifically.
+- `src/api/suggestions/` → `suggestionsQueries.ts` (the call) + `suggestionsUtils.ts` (user-message building and response validation) + `suggestionsConstants.ts` (the tool schema and system prompt) for genre/style suggestions specifically.
 - `src/composables/useSearchSuggestions.ts` → reactive `suggestions`/`loading`/`error` + `refresh()`.
 - `src/components/SuggestionPicker/SuggestionPicker.vue` → generic suggestion-button UI (loading/error/list states), wired up in `TreeView.vue`.

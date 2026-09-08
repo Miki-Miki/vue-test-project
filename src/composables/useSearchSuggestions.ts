@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import type { SearchSuggestion } from '@/types/search'
-import { suggestNextSearches } from '@/api/discogs/suggestions'
+import { suggestNextSearches } from '@/api/suggestions'
 
 const suggestions = ref<SearchSuggestion[]>([])
 const loading = ref(false)

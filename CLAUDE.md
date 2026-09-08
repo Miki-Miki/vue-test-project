@@ -22,13 +22,35 @@ Generic/reusable components (results grid, detail panel, etc.) must not carry pr
 
 Event handler functions (user interactions, emitted component events, DOM events) must be prefixed with `handle` and named for what they handle, in as few words as possible — see [.claude/rules/handler-naming.md](.claude/rules/handler-naming.md) (always in effect). `toggle(result)` should be `handleDetailPanelToggle(result)`; `onWheel` should be `handleOnWheel`.
 
+## API layer structure (`src/api/`)
+
+Each external service/feature that makes API calls gets its own directory under `src/api/`, named for what it queries — not for who happens to call it today. Inside each directory:
+
+- **`<name>Queries.ts`** — the exported functions that actually make the call (the only file other code should import from, usually via that directory's `index.ts` barrel).
+- **`<name>Utils.ts`** — functions that shape the call but don't themselves call anything: user-message builders, response parsing/validation, local types.
+- **`<name>Constants.ts`** — static data backing those utils/queries: tool/request schemas, system prompts, numeric limits. The most stable, least-often-read part of the feature — split out from `Utils.ts` so it doesn't crowd out the actual logic.
+- **`index.ts`** — barrel re-exporting the public (queries) API.
+
+```
+src/api/
+├── discogs/     # Discogs REST API — client.ts, search.ts, auth.ts
+├── claude/      # Generic Claude HTTP layer — client.ts, messages.ts (no feature knowledge)
+├── suggestions/ # Claude call: next-search genre/style suggestions
+│                #   suggestionsQueries.ts + suggestionsUtils.ts + suggestionsConstants.ts
+├── vibeSearch/  # Claude call: vibe → facet-set translation
+│                #   vibeSearchQueries.ts + vibeSearchUtils.ts + vibeSearchConstants.ts
+└── taxonomy/    # Shared taxonomy-formatting helpers used by suggestions/ and vibeSearch/ — taxonomyUtils.ts only (no queries/constants; it calls no API and has no static schema/prompt data)
+```
+
+A directory that has no query-shaping helpers or static data to separate out (e.g. `taxonomy/`, which never calls anything) can skip the `Queries`/`Constants` split and just hold `*Utils.ts` files.
+
 ## Discogs API feature work
 
 Before touching Discogs search, auth, or the results grid — `src/views/SearchView.vue`, `src/views/GridView.vue`, `src/stores/discogs.ts`, `src/composables/useDiscogsAuth.ts`, `src/composables/useSearchQuery.ts`, `src/utils/searchCommand.ts`, `src/api/discogs/`, or `plugins/discogs-oauth.ts` — read [docs/discogs-api.md](docs/discogs-api.md) first. It covers the API base URL, the User-Agent proxy workaround, rate limits, the OAuth 1.0a flow, endpoints, and response schemas.
 
 ## Claude usage (suggestions + vibe search)
 
-Before touching anything that calls Claude — `plugins/claude-proxy.ts`, `src/api/claude/`, `src/api/discogs/taxonomyPrompt.ts`, `src/api/discogs/suggestions.ts`, `src/api/discogs/vibeSearch.ts`, `src/composables/useSearchSuggestions.ts`, `src/composables/useVibeSearch.ts`, or `src/components/SuggestionPicker/` — read [docs/claude-usage.md](docs/claude-usage.md) first for the overview (proxy contract, shared tool-use pattern, both call sites). For the Tree view's next-search suggestions specifically, [docs/claude-suggestions.md](docs/claude-suggestions.md) has the full system prompt and click-to-search wiring detail.
+Before touching anything that calls Claude — `plugins/claude-proxy.ts`, `src/api/claude/`, `src/api/taxonomy/taxonomyUtils.ts`, `src/api/suggestions/`, `src/api/vibeSearch/`, `src/composables/useSearchSuggestions.ts`, `src/composables/useVibeSearch.ts`, or `src/components/SuggestionPicker/` — read [docs/claude-usage.md](docs/claude-usage.md) first for the overview (proxy contract, shared tool-use pattern, both call sites). For the Tree view's next-search suggestions specifically, [docs/claude-suggestions.md](docs/claude-suggestions.md) has the full system prompt and click-to-search wiring detail.
 
 ## Writing tests
 

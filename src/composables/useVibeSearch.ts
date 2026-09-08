@@ -5,7 +5,8 @@ import { useDiscogsStore } from '@/stores/discogs'
 import { useSearchHistoryStore } from '@/stores/searchHistory'
 import { formatCommand } from '@/utils/searchCommand'
 import { rankByPopularity } from '@/utils/relevance'
-import { searchByFacets, generateVibeSearch, refineVibeSearch } from '@/api/discogs'
+import { searchByFacets } from '@/api/discogs'
+import { generateVibeSearch, refineVibeSearch } from '@/api/vibeSearch'
 
 const TOP_N = 10
 

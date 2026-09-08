@@ -1,4 +1,4 @@
-import { suggestNextSearches } from '@/api/discogs/suggestions'
+import { suggestNextSearches } from '@/api/suggestions/suggestionsQueries'
 import { SearchMode } from '@/types/search'
 import { DISCOGS_GENRES, DISCOGS_STYLES } from '@/data/discogsTaxonomy'
 

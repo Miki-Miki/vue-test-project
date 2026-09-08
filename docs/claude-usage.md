@@ -21,11 +21,12 @@ Browser SPA --fetch--> /api/claude/messages --> plugins/claude-proxy.ts --> Anth
   `src/api/discogs/client.ts`).
 - **`src/api/claude/messages.ts`** — `sendMessage(messages, options?)` posts to
   `/api/claude/messages`; the only thing that calls the proxy. No Discogs or feature knowledge.
-- **`src/api/discogs/taxonomyPrompt.ts`** — shared helpers both features use to build the prompt:
+- **`src/api/taxonomy/taxonomyUtils.ts`** — shared helpers both features use to build the prompt:
   `taxonomyFor(mode)` (raw `DISCOGS_GENRES`/`DISCOGS_STYLES` from `src/data/discogsTaxonomy.ts`),
   `formatTaxonomyWithVibes(mode)` (one line per value, `"Ambient: Slow-moving, atmospheric..."`,
   vibes from `src/data/discogsTaxonomyVibes.ts`), and `toSearchMode`/`facetKey` for
-  validating/deduping tool output.
+  validating/deduping tool output. It calls no API itself, so it lives in its own `taxonomy/`
+  directory rather than inside either call site.
 
 ## How tool use is configured
 
@@ -36,7 +37,7 @@ output instead of parsing free-form text. The response is read from
 (every `value` must exact-match an entry in `DISCOGS_GENRES`/`DISCOGS_STYLES`) before use.
 Validation failure throws — callers surface an error state, never a silently-coerced guess.
 
-## Call site 1 — next-search suggestions (`src/api/discogs/suggestions.ts`)
+## Call site 1 — next-search suggestions (`src/api/suggestions/`)
 
 `suggestNextSearches(history: string[])` — used by the Tree view's `SuggestionPicker` to propose
 3 next genre/style picks given the ordered chain of searches so far. Tool: `suggest_searches`,
@@ -48,7 +49,7 @@ Clicking a suggestion runs `searchByCommand(mode, value)` — identical to typin
 Full detail (system prompt, exact rules, validation, click-to-search wiring):
 [docs/claude-suggestions.md](./claude-suggestions.md).
 
-## Call site 2 — vibe search (`src/api/discogs/vibeSearch.ts`)
+## Call site 2 — vibe search (`src/api/vibeSearch/`)
 
 Powers `/vibe <free text>` search: translates an open-ended vibe description into a concrete set
 of genres/styles, then lets the user refine that set by picking one of the results' tags.
@@ -73,10 +74,14 @@ returned facets into a Discogs search via `searchByFacets` and pushes results in
 |----------------------------------|------|
 | API key / model / proxy route    | `plugins/claude-proxy.ts`, `vite.config.ts` |
 | Generic Claude HTTP layer        | `src/api/claude/client.ts`, `src/api/claude/messages.ts` |
-| Shared taxonomy/prompt helpers   | `src/api/discogs/taxonomyPrompt.ts` |
-| Next-search suggestions          | `src/api/discogs/suggestions.ts`, `src/composables/useSearchSuggestions.ts`, `src/components/SuggestionPicker/` |
-| Vibe search                      | `src/api/discogs/vibeSearch.ts`, `src/composables/useVibeSearch.ts` |
+| Shared taxonomy/prompt helpers   | `src/api/taxonomy/taxonomyUtils.ts` |
+| Next-search suggestions          | `src/api/suggestions/suggestionsQueries.ts` + `suggestionsUtils.ts` + `suggestionsConstants.ts`, `src/composables/useSearchSuggestions.ts`, `src/components/SuggestionPicker/` |
+| Vibe search                      | `src/api/vibeSearch/vibeSearchQueries.ts` + `vibeSearchUtils.ts` + `vibeSearchConstants.ts`, `src/composables/useVibeSearch.ts` |
 
-Both feature files (`suggestions.ts`, `vibeSearch.ts`) live in `src/api/discogs/` rather than
-`src/api/claude/` — they're Discogs-domain integration code (the only layer allowed to know the
-taxonomy and build a Discogs-flavored prompt around it), not generic Claude plumbing.
+Each call site gets its own directory under `src/api/`, split three ways: a `*Queries.ts` file
+(the exported functions that actually call `sendMessage`, re-exported via that directory's
+`index.ts`), a `*Utils.ts` file (user-message builders, response parsing/validation), and a
+`*Constants.ts` file (the tool schema and system prompt — static data, kept separate from the
+logic that uses it). Neither `suggestions/` nor `vibeSearch/` lives under `src/api/discogs/` or
+`src/api/claude/` even though they use Discogs taxonomy data and call the Claude endpoint — the
+directory name reflects the concern (suggestions, vibe search), not an underlying provider.
