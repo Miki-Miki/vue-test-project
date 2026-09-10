@@ -1,7 +1,7 @@
 import type { Tool } from '@anthropic-ai/sdk/resources/messages'
 import type { SearchResult, SearchSuggestion } from '@/types/search'
 import { sendMessage } from '@/api/claude/messages'
-import { facetKey } from '@/api/taxonomy/taxonomyUtils'
+import { facetKey, buildCacheableTaxonomyBlock } from '@/api/taxonomy/taxonomyUtils'
 import {
   MIN_REPLACED,
   MAX_REPLACED,
@@ -10,15 +10,15 @@ import {
   VIBE_SYSTEM_PROMPT,
   VIBE_REFINE_SYSTEM_PROMPT,
 } from './vibeSearchConstants'
-import { buildTaxonomyBlock, buildRefineUserMessage, parseFacets } from './vibeSearchUtils'
+import { buildRefineUserMessage, parseFacets } from './vibeSearchUtils'
 
 async function callFacetsTool(
   userMessage: string,
-  system: string,
+  systemPrompt: string,
   tool: Tool,
 ): Promise<SearchSuggestion[]> {
   const response = await sendMessage([{ role: 'user', content: userMessage }], {
-    system,
+    system: [{ type: 'text', text: systemPrompt }, buildCacheableTaxonomyBlock()],
     tools: [tool],
     tool_choice: { type: 'tool', name: tool.name },
   })
@@ -37,7 +37,7 @@ async function callFacetsTool(
 }
 
 export async function generateVibeSearch(vibePrompt: string): Promise<SearchSuggestion[]> {
-  const userMessage = [buildTaxonomyBlock(), `Vibe: ${vibePrompt}`].join('\n\n')
+  const userMessage = `Vibe: ${vibePrompt}`
   return callFacetsTool(userMessage, VIBE_SYSTEM_PROMPT, SELECT_VIBE_FACETS_TOOL)
 }
 

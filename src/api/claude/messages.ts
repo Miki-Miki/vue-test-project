@@ -1,4 +1,10 @@
-import type { ContentBlock, MessageCreateParams, MessageParam, Tool } from '@anthropic-ai/sdk/resources/messages'
+import type {
+  ContentBlock,
+  MessageCreateParams,
+  MessageParam,
+  TextBlockParam,
+  Tool,
+} from '@anthropic-ai/sdk/resources/messages'
 import { claudeRequest } from './client'
 import type { ClaudeResponse } from './client'
 
@@ -7,7 +13,7 @@ export interface RawMessagesData {
 }
 
 export interface SendMessageOptions {
-  system?: string
+  system?: string | TextBlockParam[]
   tools?: Tool[]
   tool_choice?: MessageCreateParams['tool_choice']
 }

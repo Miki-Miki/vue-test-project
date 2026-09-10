@@ -1,9 +1,24 @@
 .results-scroll-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+
+  &-expanded {
+    cursor: default;
+
+    &:hover {
+      transform: none;
+    }
+  }
 
   &-header {
     display: flex;
@@ -28,16 +43,58 @@
       color: var(--color-text-muted);
     }
 
-    &-expand-toggle {
-      flex-shrink: 0;
-      padding: 0 var(--space-2);
+    &-collapse-button {
+      position: absolute;
+      top: var(--space-2);
+      right: var(--space-2);
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      padding: 0;
       line-height: 1;
     }
+  }
+
+  &-expanded &-header {
+    padding-right: var(--space-6);
   }
 
   &-table {
     flex: 1;
     overflow: auto;
+    // .v-table paints its own background from Vuetify's theme vars; this class lives on the
+    // same DOM node (v-data-table forwards it to VTable's root), so it's styled directly here
+    // rather than via :deep(.v-data-table), which only matches true descendants.
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+
+    // Vuetify's internal DOM — no classes to hook into from the template (rule 6 exception).
+    :deep(.v-data-table__th) {
+      background: var(--color-surface-muted);
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-text-muted);
+    }
+
+    :deep(tbody tr) {
+      cursor: pointer;
+
+      &:hover {
+        background: var(--color-surface-hover);
+      }
+    }
+
+    :deep(.v-data-table__td),
+    :deep(.v-data-table__th) {
+      border-color: var(--color-border) !important;
+    }
   }
 
   &-summary {

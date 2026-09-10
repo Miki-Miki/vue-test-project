@@ -29,7 +29,11 @@ const uniqueTags = computed(() => {
 const visibleTags = computed(() => uniqueTags.value.slice(0, MAX_VISIBLE_TAGS))
 const hiddenTagCount = computed(() => uniqueTags.value.length - visibleTags.value.length)
 
-function handleExpandToggle() {
+function handleCardExpand() {
+  if (!props.expanded) emit('expandToggle')
+}
+
+function handleCollapse() {
   emit('expandToggle')
 }
 
@@ -39,18 +43,21 @@ function rowProps({ item }: { item: SearchResult }) {
 </script>
 
 <template>
-  <div :class="['results-scroll-card', props.class]">
+  <div
+    :class="['results-scroll-card', props.class, { 'results-scroll-card-expanded': expanded }]"
+    @click="handleCardExpand"
+  >
     <header class="results-scroll-card-header">
       <span class="results-scroll-card-header-query">{{ query }}</span>
       <span class="results-scroll-card-header-count">{{ results.length }} results</span>
       <button
+        v-if="expanded"
         type="button"
-        class="btn results-scroll-card-header-expand-toggle"
-        :aria-expanded="expanded ?? false"
-        :aria-label="expanded ? 'Collapse' : 'Expand'"
-        @click="handleExpandToggle"
+        class="btn results-scroll-card-header-collapse-button"
+        aria-label="Collapse"
+        @click.stop="handleCollapse"
       >
-        {{ expanded ? '⤡' : '⤢' }}
+        ⤡
       </button>
     </header>
 
@@ -62,6 +69,7 @@ function rowProps({ item }: { item: SearchResult }) {
       :row-props="rowProps"
       item-value="id"
       density="compact"
+      hide-default-footer
     >
       <template #[`item.genre`]="{ value }">{{ joinArrayField(value) }}</template>
       <template #[`item.style`]="{ value }">{{ joinArrayField(value) }}</template>

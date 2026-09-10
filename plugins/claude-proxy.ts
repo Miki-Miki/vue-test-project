@@ -1,6 +1,6 @@
 import type { Plugin } from 'vite'
 import Anthropic from '@anthropic-ai/sdk'
-import type { MessageCreateParams, MessageParam, Tool } from '@anthropic-ai/sdk/resources/messages'
+import type { MessageCreateParams, MessageParam, TextBlockParam, Tool } from '@anthropic-ai/sdk/resources/messages'
 
 export interface ClaudeProxyConfig {
   apiKey: string
@@ -9,7 +9,7 @@ export interface ClaudeProxyConfig {
 
 interface ClaudeMessagesRequestBody {
   messages: MessageParam[]
-  system?: string
+  system?: string | TextBlockParam[]
   tools?: Tool[]
   tool_choice?: MessageCreateParams['tool_choice']
 }
@@ -40,7 +40,9 @@ export function claudeProxyPlugin(config: ClaudeProxyConfig): Plugin {
 
             const response = await client.messages.create({
               model: config.model,
-              max_tokens: 1024,
+              // Every call through this proxy forces tool use (tool_choice), so the
+              // response is always a handful of short JSON fields — no need for a large cap.
+              max_tokens: 256,
               messages: body.messages,
               ...(body.system ? { system: body.system } : {}),
               ...(body.tools ? { tools: body.tools } : {}),

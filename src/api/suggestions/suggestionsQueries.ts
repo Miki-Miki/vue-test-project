@@ -1,11 +1,12 @@
 import type { SearchSuggestion } from '@/types/search'
 import { sendMessage } from '@/api/claude/messages'
+import { buildCacheableTaxonomyBlock } from '@/api/taxonomy/taxonomyUtils'
 import { SUGGEST_SEARCHES_TOOL, SYSTEM_PROMPT } from './suggestionsConstants'
 import { buildUserMessage, parseSuggestions } from './suggestionsUtils'
 
 export async function suggestNextSearches(history: string[]): Promise<SearchSuggestion[]> {
   const response = await sendMessage([{ role: 'user', content: buildUserMessage(history) }], {
-    system: SYSTEM_PROMPT,
+    system: [{ type: 'text', text: SYSTEM_PROMPT }, buildCacheableTaxonomyBlock()],
     tools: [SUGGEST_SEARCHES_TOOL],
     tool_choice: { type: 'tool', name: 'suggest_searches' },
   })

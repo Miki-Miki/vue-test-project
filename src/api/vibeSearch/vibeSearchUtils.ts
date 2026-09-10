@@ -1,6 +1,5 @@
-import { SearchMode } from '@/types/search'
 import type { SearchResult, SearchSuggestion } from '@/types/search'
-import { formatTaxonomyWithVibes, taxonomyFor, toSearchMode, facetKey } from '@/api/taxonomy/taxonomyUtils'
+import { taxonomyFor, toSearchMode, facetKey } from '@/api/taxonomy/taxonomyUtils'
 import { MIN_FACETS, MAX_FACETS } from './vibeSearchConstants'
 
 interface RawFacet {
@@ -10,13 +9,6 @@ interface RawFacet {
 
 interface FacetsToolInput {
   facets: RawFacet[]
-}
-
-export function buildTaxonomyBlock(): string {
-  return [
-    `Genres (name: vibe):\n${formatTaxonomyWithVibes(SearchMode.Genre)}`,
-    `Styles (name: vibe):\n${formatTaxonomyWithVibes(SearchMode.Style)}`,
-  ].join('\n\n')
 }
 
 export function parseFacets(input: unknown): SearchSuggestion[] {
@@ -49,7 +41,6 @@ export function buildRefineUserMessage(
   const shownTags = [...new Set(shownResults.flatMap((r) => [...(r.genre ?? []), ...(r.style ?? [])]))]
 
   return [
-    buildTaxonomyBlock(),
     `Previous facets (strong anchor): ${JSON.stringify(previousFacets)}`,
     `Genre/style tags seen in the last shown results (light signal): ${JSON.stringify(shownTags)}`,
     `Picked suggestion (strong signal, must appear in the output): ${JSON.stringify(picked)}`,

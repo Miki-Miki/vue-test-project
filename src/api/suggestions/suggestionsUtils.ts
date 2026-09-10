@@ -1,6 +1,5 @@
-import { SearchMode } from '@/types/search'
+import { taxonomyFor, toSearchMode } from '@/api/taxonomy/taxonomyUtils'
 import type { SearchSuggestion } from '@/types/search'
-import { formatTaxonomyWithVibes, taxonomyFor, toSearchMode } from '@/api/taxonomy/taxonomyUtils'
 import { SUGGESTION_COUNT } from './suggestionsConstants'
 
 interface RawSuggestion {
@@ -13,11 +12,7 @@ interface SuggestToolInput {
 }
 
 export function buildUserMessage(history: string[]): string {
-  return [
-    `Genres (name: vibe):\n${formatTaxonomyWithVibes(SearchMode.Genre)}`,
-    `Styles (name: vibe):\n${formatTaxonomyWithVibes(SearchMode.Style)}`,
-    `Search history (oldest to newest): ${JSON.stringify(history)}`,
-  ].join('\n\n')
+  return `Search history (oldest to newest): ${JSON.stringify(history)}`
 }
 
 export function parseSuggestions(input: unknown): SearchSuggestion[] {
