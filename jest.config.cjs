@@ -11,7 +11,7 @@ module.exports = {
     '^.+\\.[tj]sx?$': 'babel-jest',
     '^.+\\.mjs$': 'babel-jest',
   },
-  transformIgnorePatterns: ['node_modules/(?!.*perfect-debounce)'],
+  transformIgnorePatterns: ['node_modules/(?!.*(perfect-debounce|d3-force|d3-dispatch|d3-quadtree|d3-timer))'],
   setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
   clearMocks: true,
   collectCoverageFrom: [

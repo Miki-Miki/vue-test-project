@@ -2,7 +2,7 @@
 // the `jest` global types don't leak into the app build's type-checking.
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["src/**/__tests__/**/*", "src/test/**/*"],
+  "include": ["env.d.ts", "src/**/__tests__/**/*", "src/test/**/*"],
   "compilerOptions": {
     // Jest's global types (`jest`, `describe`, `it`, `expect`, `afterEach`, ...)
     // plus Node globals used in setup/mocks.

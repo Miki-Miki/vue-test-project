@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useDiscogsStore } from '@/stores/discogs'
 import { useDiscogsAuth } from '@/composables/useDiscogsAuth'
 import { useDetailPanel } from '@/composables/useDetailPanel'
@@ -35,6 +36,7 @@ function rowProps({ item }: { item: SearchResult }) {
     <AuthPrompt v-if="!authenticated" />
 
     <template v-else>
+      <RouterLink :to="{ name: 'tree' }" class="btn grid-view-tree-link">← Tree view</RouterLink>
       <p v-if="rowData.length === 0" class="grid-view-empty">Run a search to populate the grid.</p>
       <div v-else class="grid-view-wrapper">
         <v-data-table

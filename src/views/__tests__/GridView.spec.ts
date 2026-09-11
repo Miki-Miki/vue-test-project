@@ -1,5 +1,6 @@
 import { defineComponent, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
+import { createRouter, createMemoryHistory } from 'vue-router'
 import { mount } from '@vue/test-utils'
 import GridView from '@/views/GridView/GridView.vue'
 import { useDiscogsStore } from '@/stores/discogs'
@@ -44,8 +45,21 @@ const results: SearchResult[] = [
   },
 ]
 
+function createTestRouter() {
+  return createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/', redirect: '/grid' },
+      { path: '/grid', name: 'grid', component: { template: '<div class="grid-page" />' } },
+      { path: '/tree', name: 'tree', component: { template: '<div class="tree-page" />' } },
+    ],
+  })
+}
+
 function mountGridView() {
-  return mount(GridView, { global: { stubs: { VDataTable: VDataTableStub } } })
+  return mount(GridView, {
+    global: { plugins: [createTestRouter()], stubs: { VDataTable: VDataTableStub } },
+  })
 }
 
 function clickRow(wrapper: ReturnType<typeof mountGridView>, item: SearchResult) {

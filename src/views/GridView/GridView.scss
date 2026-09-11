@@ -44,4 +44,9 @@
   &-empty {
     padding: 2rem;
   }
+
+  &-tree-link {
+    align-self: flex-start;
+    margin: var(--space-3);
+  }
 }
