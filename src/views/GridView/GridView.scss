@@ -48,5 +48,7 @@
   &-tree-link {
     align-self: flex-start;
     margin: var(--space-3);
+    max-height: 30px;
+    height: 30px;
   }
 }
