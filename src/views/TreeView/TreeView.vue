@@ -22,10 +22,14 @@ const {
   canvasRef,
   graphNodes,
   nodeStyle,
+  contentStyle,
   linkGeometry,
   handleNodeHoverChange,
   handleNodeDragStart,
   handleNodeResize,
+  handleCanvasZoom,
+  handleCanvasPanStart,
+  canvasCursor,
   handleSuggestionSelect,
 } = useSearchResultGraph({
     activeSearches,
@@ -44,38 +48,46 @@ const {
 
 <template>
   <div class="tree-view">
-    <div ref="canvasRef" class="tree-view-canvas">
-      <svg class="tree-view-canvas-links">
-        <line
-          v-for="link in linkGeometry()"
-          :key="link.id"
-          class="tree-view-canvas-links-line"
-          :x1="link.x1"
-          :y1="link.y1"
-          :x2="link.x2"
-          :y2="link.y2"
-        />
-      </svg>
-      <div
-        v-for="node in graphNodes"
-        :key="node.id"
-        class="tree-view-canvas-node"
-        :style="nodeStyle(node)"
-      >
-        <ResultsNode
-          v-if="node.kind === 'result'"
-          :query="node.query"
-          :results="node.results"
-          @hover-change="handleNodeHoverChange(node.id, $event)"
-          @drag-start="handleNodeDragStart(node.id, $event)"
-          @resize="handleNodeResize(node.id, $event)"
-        />
-        <SuggestionNode
-          v-else
-          :suggestion="node.suggestion"
-          @hover-change="handleNodeHoverChange(node.id, $event)"
-          @select="handleSuggestionSelect(node)"
-        />
+    <div
+      ref="canvasRef"
+      class="tree-view-canvas"
+      :style="{ cursor: canvasCursor() }"
+      @wheel.prevent="handleCanvasZoom"
+      @pointerdown="handleCanvasPanStart"
+    >
+      <div class="tree-view-canvas-content" :style="contentStyle()">
+        <svg class="tree-view-canvas-content-links">
+          <line
+            v-for="link in linkGeometry()"
+            :key="link.id"
+            class="tree-view-canvas-content-links-line"
+            :x1="link.x1"
+            :y1="link.y1"
+            :x2="link.x2"
+            :y2="link.y2"
+          />
+        </svg>
+        <div
+          v-for="node in graphNodes"
+          :key="node.id"
+          class="tree-view-canvas-content-node"
+          :style="nodeStyle(node)"
+        >
+          <ResultsNode
+            v-if="node.kind === 'result'"
+            :query="node.query"
+            :results="node.results"
+            @hover-change="handleNodeHoverChange(node.id, $event)"
+            @drag-start="handleNodeDragStart(node.id, $event)"
+            @resize="handleNodeResize(node.id, $event)"
+          />
+          <SuggestionNode
+            v-else
+            :suggestion="node.suggestion"
+            @hover-change="handleNodeHoverChange(node.id, $event)"
+            @select="handleSuggestionSelect(node)"
+          />
+        </div>
       </div>
     </div>
   </div>

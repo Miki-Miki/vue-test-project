@@ -35,7 +35,11 @@ export function useSearchResultGraph(options: UseSearchResultGraphOptions) {
     handleNodeHoverChange,
     handleNodeDragStart,
     handleNodeResize,
+    handleCanvasZoom,
+    handleCanvasPanStart,
+    canvasCursor,
     nodeStyle,
+    contentStyle,
     linkGeometry,
   } = useNodeGraph(
     graphNodes,
@@ -129,10 +133,14 @@ export function useSearchResultGraph(options: UseSearchResultGraphOptions) {
     canvasRef,
     graphNodes,
     nodeStyle,
+    contentStyle,
     linkGeometry,
     handleNodeHoverChange,
     handleNodeDragStart,
     handleNodeResize,
+    handleCanvasZoom,
+    handleCanvasPanStart,
+    canvasCursor,
     handleSuggestionSelect,
   }
 }

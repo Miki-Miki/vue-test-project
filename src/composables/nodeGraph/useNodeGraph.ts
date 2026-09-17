@@ -2,7 +2,13 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import type { ShallowRef } from 'vue'
 import { linkEndpointId, useForceSimulation } from '../forceSimulation/useForceSimulation'
 import type { ForceLinkDatum, ForceNodeDatum } from '../forceSimulation/useForceSimulation'
-import { CLICK_MOVEMENT_THRESHOLD, HOVER_RADIUS_MULTIPLIER } from './nodeGraphConstants'
+import {
+  CLICK_MOVEMENT_THRESHOLD,
+  HOVER_RADIUS_MULTIPLIER,
+  ZOOM_MAX,
+  ZOOM_MIN,
+  ZOOM_SENSITIVITY,
+} from './nodeGraphConstants'
 
 export interface BaseGraphNode extends ForceNodeDatum {
   baseRadius: number
@@ -31,6 +37,18 @@ interface ActiveDrag {
   moved: boolean
 }
 
+interface ActiveCanvasPan {
+  startClientX: number
+  startClientY: number
+  startPanX: number
+  startPanY: number
+}
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  return target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+}
+
 /**
  * Gives an arbitrary set of nodes physical behavior on a canvas: force-simulated
  * positioning, hover-triggered radius growth, and click-vs-drag pointer interaction.
@@ -43,6 +61,12 @@ export function useNodeGraph<T extends BaseGraphNode>(
 ) {
   const canvasRef = ref<HTMLElement | null>(null)
   const containerSize = ref({ width: 0, height: 0 })
+  const zoom = ref(1)
+  // screen-space offset (px) applied before scaling; re-anchored on every wheel tick
+  // so the point under the cursor is what zooms in/out toward, not the canvas center
+  const pan = ref({ x: 0, y: 0 })
+  const isSpaceHeld = ref(false)
+  const isPanningCanvas = ref(false)
 
   const { tick, setRadius, startDrag, dragTo, endDrag, sync } = useForceSimulation(nodes, containerSize, links)
 
@@ -51,6 +75,94 @@ export function useNodeGraph<T extends BaseGraphNode>(
     const rect = canvasRef.value.getBoundingClientRect()
     containerSize.value = { width: rect.width, height: rect.height }
   })
+
+  function handleSpaceKeyDown(event: KeyboardEvent) {
+    if (event.code !== 'Space' || isTypingTarget(event.target)) return
+    event.preventDefault()
+    isSpaceHeld.value = true
+  }
+
+  function handleSpaceKeyUp(event: KeyboardEvent) {
+    if (event.code !== 'Space') return
+    isSpaceHeld.value = false
+  }
+
+  function canvasCursor(): string {
+    if (isPanningCanvas.value) return 'grabbing'
+    if (isSpaceHeld.value) return 'grab'
+    return ''
+  }
+
+  let activeCanvasPan: ActiveCanvasPan | null = null
+
+  function handleCanvasPanMove(event: PointerEvent) {
+    if (!activeCanvasPan) return
+    pan.value = {
+      x: activeCanvasPan.startPanX + (event.clientX - activeCanvasPan.startClientX),
+      y: activeCanvasPan.startPanY + (event.clientY - activeCanvasPan.startClientY),
+    }
+  }
+
+  function handleCanvasPanEnd() {
+    activeCanvasPan = null
+    isPanningCanvas.value = false
+    window.removeEventListener('pointermove', handleCanvasPanMove)
+    window.removeEventListener('pointerup', handleCanvasPanEnd)
+  }
+
+  function handleCanvasPanStart(event: PointerEvent) {
+    if (!isSpaceHeld.value || event.button !== 0) return
+    event.preventDefault()
+    activeCanvasPan = {
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startPanX: pan.value.x,
+      startPanY: pan.value.y,
+    }
+    isPanningCanvas.value = true
+    window.addEventListener('pointermove', handleCanvasPanMove)
+    window.addEventListener('pointerup', handleCanvasPanEnd)
+  }
+
+  onMounted(() => {
+    window.addEventListener('keydown', handleSpaceKeyDown)
+    window.addEventListener('keyup', handleSpaceKeyUp)
+  })
+
+  function handleCanvasZoom(event: WheelEvent) {
+    if (!canvasRef.value) return
+    const rect = canvasRef.value.getBoundingClientRect()
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+
+    const factor = 1 - event.deltaY * ZOOM_SENSITIVITY
+    const newZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom.value * factor))
+    const scaleRatio = newZoom / zoom.value
+
+    // keeps the simulation point currently under the cursor fixed on screen:
+    // pan' = mouse - (mouse - pan) * (newZoom / zoom)
+    pan.value = {
+      x: mouseX - (mouseX - pan.value.x) * scaleRatio,
+      y: mouseY - (mouseY - pan.value.y) * scaleRatio,
+    }
+    zoom.value = newZoom
+  }
+
+  function contentStyle() {
+    return {
+      transform: `translate(${pan.value.x}px, ${pan.value.y}px) scale(${zoom.value})`,
+      transformOrigin: '0 0',
+    }
+  }
+
+  // screen coordinates have to be un-panned and un-scaled to land back in the
+  // simulation's untransformed coordinate space
+  function toSimSpace(clientX: number, clientY: number, rectLeft: number, rectTop: number) {
+    return {
+      x: (clientX - rectLeft - pan.value.x) / zoom.value,
+      y: (clientY - rectTop - pan.value.y) / zoom.value,
+    }
+  }
 
   function handleNodeHoverChange(nodeId: string, hovering: boolean) {
     const node = nodes.value.find((n) => n.id === nodeId)
@@ -83,9 +195,13 @@ export function useNodeGraph<T extends BaseGraphNode>(
       if (Math.hypot(dx, dy) > CLICK_MOVEMENT_THRESHOLD) activeDrag.moved = true
     }
 
-    const x = event.clientX - activeDrag.rectLeft - activeDrag.offsetX
-    const y = event.clientY - activeDrag.rectTop - activeDrag.offsetY
-    dragTo(activeDrag.nodeId, x, y)
+    const { x: simX, y: simY } = toSimSpace(
+      event.clientX,
+      event.clientY,
+      activeDrag.rectLeft,
+      activeDrag.rectTop,
+    )
+    dragTo(activeDrag.nodeId, simX - activeDrag.offsetX, simY - activeDrag.offsetY)
   }
 
   function handlePointerUp() {
@@ -100,14 +216,16 @@ export function useNodeGraph<T extends BaseGraphNode>(
   }
 
   function handleNodeDragStart(nodeId: string, event: PointerEvent) {
+    if (isSpaceHeld.value) return
     const node = nodes.value.find((n) => n.id === nodeId)
     if (!node || !canvasRef.value) return
 
     const rect = canvasRef.value.getBoundingClientRect()
+    const { x: simX, y: simY } = toSimSpace(event.clientX, event.clientY, rect.left, rect.top)
     activeDrag = {
       nodeId,
-      offsetX: event.clientX - rect.left - (node.x ?? 0),
-      offsetY: event.clientY - rect.top - (node.y ?? 0),
+      offsetX: simX - (node.x ?? 0),
+      offsetY: simY - (node.y ?? 0),
       rectLeft: rect.left,
       rectTop: rect.top,
       startClientX: event.clientX,
@@ -123,6 +241,10 @@ export function useNodeGraph<T extends BaseGraphNode>(
   onUnmounted(() => {
     window.removeEventListener('pointermove', handlePointerMove)
     window.removeEventListener('pointerup', handlePointerUp)
+    window.removeEventListener('pointermove', handleCanvasPanMove)
+    window.removeEventListener('pointerup', handleCanvasPanEnd)
+    window.removeEventListener('keydown', handleSpaceKeyDown)
+    window.removeEventListener('keyup', handleSpaceKeyUp)
   })
 
   function nodeStyle(node: T) {
@@ -158,7 +280,11 @@ export function useNodeGraph<T extends BaseGraphNode>(
     handleNodeHoverChange,
     handleNodeDragStart,
     handleNodeResize,
+    handleCanvasZoom,
+    handleCanvasPanStart,
+    canvasCursor,
     nodeStyle,
+    contentStyle,
     linkGeometry,
   }
 }
