@@ -18,8 +18,16 @@ const activeSession = computed(
 )
 const activeSearches = computed(() => activeSession.value?.searches)
 
-const { canvasRef, graphNodes, nodeStyle, handleNodeHoverChange, handleNodeDragStart, handleSuggestionSelect } =
-  useSearchResultGraph({
+const {
+  canvasRef,
+  graphNodes,
+  nodeStyle,
+  linkGeometry,
+  handleNodeHoverChange,
+  handleNodeDragStart,
+  handleNodeResize,
+  handleSuggestionSelect,
+} = useSearchResultGraph({
     activeSearches,
     suggestions,
     refreshSuggestionsFor: refreshSuggestions,
@@ -37,6 +45,17 @@ const { canvasRef, graphNodes, nodeStyle, handleNodeHoverChange, handleNodeDragS
 <template>
   <div class="tree-view">
     <div ref="canvasRef" class="tree-view-canvas">
+      <svg class="tree-view-canvas-links">
+        <line
+          v-for="link in linkGeometry()"
+          :key="link.id"
+          class="tree-view-canvas-links-line"
+          :x1="link.x1"
+          :y1="link.y1"
+          :x2="link.x2"
+          :y2="link.y2"
+        />
+      </svg>
       <div
         v-for="node in graphNodes"
         :key="node.id"
@@ -49,6 +68,7 @@ const { canvasRef, graphNodes, nodeStyle, handleNodeHoverChange, handleNodeDragS
           :results="node.results"
           @hover-change="handleNodeHoverChange(node.id, $event)"
           @drag-start="handleNodeDragStart(node.id, $event)"
+          @resize="handleNodeResize(node.id, $event)"
         />
         <SuggestionNode
           v-else

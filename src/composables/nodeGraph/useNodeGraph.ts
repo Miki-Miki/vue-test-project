@@ -1,11 +1,19 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import type { ShallowRef } from 'vue'
-import { useForceSimulation } from '../forceSimulation/useForceSimulation'
+import { linkEndpointId, useForceSimulation } from '../forceSimulation/useForceSimulation'
 import type { ForceLinkDatum, ForceNodeDatum } from '../forceSimulation/useForceSimulation'
 import { CLICK_MOVEMENT_THRESHOLD, HOVER_RADIUS_MULTIPLIER } from './nodeGraphConstants'
 
 export interface BaseGraphNode extends ForceNodeDatum {
   baseRadius: number
+}
+
+export interface LinkLine {
+  id: string
+  x1: number
+  y1: number
+  x2: number
+  y2: number
 }
 
 interface UseNodeGraphOptions<T extends BaseGraphNode> {
@@ -54,6 +62,14 @@ export function useNodeGraph<T extends BaseGraphNode>(
     const node = nodes.value.find((n) => n.id === nodeId)
     if (!node) return
     options.onNodeSelect?.(node)
+  }
+
+  function handleNodeResize(nodeId: string, size: { width: number; height: number }) {
+    const node = nodes.value.find((n) => n.id === nodeId)
+    if (!node || (node.width === size.width && node.height === size.height)) return
+    node.width = size.width
+    node.height = size.height
+    sync()
   }
 
   let activeDrag: ActiveDrag | null = null
@@ -114,5 +130,35 @@ export function useNodeGraph<T extends BaseGraphNode>(
     return { transform: `translate3d(${node.x ?? 0}px, ${node.y ?? 0}px, 0)` }
   }
 
-  return { canvasRef, containerSize, tick, sync, handleNodeHoverChange, handleNodeDragStart, nodeStyle }
+  function linkGeometry(): LinkLine[] {
+    void tick.value
+    const lines: LinkLine[] = []
+    for (const link of links.value) {
+      const sourceId = linkEndpointId(link.source)
+      const targetId = linkEndpointId(link.target)
+      const source = nodes.value.find((n) => n.id === sourceId)
+      const target = nodes.value.find((n) => n.id === targetId)
+      if (!source || !target) continue
+      lines.push({
+        id: `${sourceId}-${targetId}`,
+        x1: (source.x ?? 0) + source.width / 2,
+        y1: (source.y ?? 0) + source.height / 2,
+        x2: (target.x ?? 0) + target.width / 2,
+        y2: (target.y ?? 0) + target.height / 2,
+      })
+    }
+    return lines
+  }
+
+  return {
+    canvasRef,
+    containerSize,
+    tick,
+    sync,
+    handleNodeHoverChange,
+    handleNodeDragStart,
+    handleNodeResize,
+    nodeStyle,
+    linkGeometry,
+  }
 }

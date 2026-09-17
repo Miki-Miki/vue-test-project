@@ -4,7 +4,7 @@ import type { SearchSuggestion } from '@/types/search'
 import type { SearchQueryResult } from '@/stores/searchHistory'
 import { useNodeGraph } from '../nodeGraph/useNodeGraph'
 import type { ForceLinkDatum } from '../forceSimulation/useForceSimulation'
-import { isResultNode, makeResultNode } from './searchResultGraphUtils'
+import { isResultLink, isResultNode, makeResultNode } from './searchResultGraphUtils'
 import type { GraphNode, ResultGraphNode, SuggestionGraphNode } from './searchResultGraphUtils'
 import {
   NODE_SPAWN_OFFSET_X,
@@ -28,7 +28,16 @@ export function useSearchResultGraph(options: UseSearchResultGraphOptions) {
   const graphNodes = shallowRef<GraphNode[]>([])
   const graphLinks = shallowRef<ForceLinkDatum[]>([])
 
-  const { canvasRef, containerSize, sync, handleNodeHoverChange, handleNodeDragStart, nodeStyle } = useNodeGraph(
+  const {
+    canvasRef,
+    containerSize,
+    sync,
+    handleNodeHoverChange,
+    handleNodeDragStart,
+    handleNodeResize,
+    nodeStyle,
+    linkGeometry,
+  } = useNodeGraph(
     graphNodes,
     graphLinks,
     {
@@ -39,9 +48,10 @@ export function useSearchResultGraph(options: UseSearchResultGraphOptions) {
     },
   )
 
-  function spawnResultNodes(newSearches: SearchQueryResult[]): ResultGraphNode[] {
-    const priorResultNodes = graphNodes.value.filter(isResultNode)
-    const lastPrior = priorResultNodes[priorResultNodes.length - 1]
+  function spawnResultNodes(
+    newSearches: SearchQueryResult[],
+    lastPrior: ResultGraphNode | undefined,
+  ): { nodes: ResultGraphNode[]; links: ForceLinkDatum[] } {
     let anchor = lastPrior
       ? { x: lastPrior.x ?? 0, y: lastPrior.y ?? 0 }
       : {
@@ -50,12 +60,16 @@ export function useSearchResultGraph(options: UseSearchResultGraphOptions) {
         }
 
     const spawned: ResultGraphNode[] = []
+    const links: ForceLinkDatum[] = []
+    let previous = lastPrior
     for (const search of newSearches) {
       const node = makeResultNode(search, anchor)
       spawned.push(node)
+      if (previous) links.push({ source: previous.id, target: node.id })
+      previous = node
       anchor = { x: node.x ?? 0, y: node.y ?? 0 }
     }
-    return spawned
+    return { nodes: spawned, links }
   }
 
   async function refreshSuggestionsForNode(node: ResultGraphNode): Promise<void> {
@@ -77,7 +91,10 @@ export function useSearchResultGraph(options: UseSearchResultGraphOptions) {
     }))
 
     graphNodes.value = [...graphNodes.value.filter(isResultNode), ...suggestionNodes]
-    graphLinks.value = suggestionNodes.map((s) => ({ source: s.id, target: node.id }))
+    graphLinks.value = [
+      ...graphLinks.value.filter(isResultLink),
+      ...suggestionNodes.map((s) => ({ source: s.id, target: node.id })),
+    ]
     sync()
   }
 
@@ -86,13 +103,17 @@ export function useSearchResultGraph(options: UseSearchResultGraphOptions) {
     (searches) => {
       if (!searches || searches.length === 0) return
 
-      const existingSearchIds = new Set(graphNodes.value.filter(isResultNode).map((n) => n.searchId))
+      const priorResultNodes = graphNodes.value.filter(isResultNode)
+      const existingSearchIds = new Set(priorResultNodes.map((n) => n.searchId))
       const newSearches = searches.filter((s) => !existingSearchIds.has(s.id))
       if (newSearches.length === 0) return
 
-      const spawned = spawnResultNodes(newSearches)
-      graphNodes.value = [...graphNodes.value.filter(isResultNode), ...spawned]
-      graphLinks.value = []
+      const { nodes: spawned, links: newResultLinks } = spawnResultNodes(
+        newSearches,
+        priorResultNodes[priorResultNodes.length - 1],
+      )
+      graphNodes.value = [...priorResultNodes, ...spawned]
+      graphLinks.value = [...graphLinks.value.filter(isResultLink), ...newResultLinks]
       sync()
 
       void refreshSuggestionsForNode(spawned[spawned.length - 1]!)
@@ -108,8 +129,10 @@ export function useSearchResultGraph(options: UseSearchResultGraphOptions) {
     canvasRef,
     graphNodes,
     nodeStyle,
+    linkGeometry,
     handleNodeHoverChange,
     handleNodeDragStart,
+    handleNodeResize,
     handleSuggestionSelect,
   }
 }

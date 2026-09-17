@@ -20,20 +20,23 @@ export interface ForceLinkDatum {
   target: string
 }
 
+// d3's forceLink mutates each link's source/target in place, replacing the id string with the
+// resolved node object once the simulation initializes — callers reading a live link must
+// handle both states, even though ForceLinkDatum's own type only describes how one is authored.
+export function linkEndpointId(ref: string | { id: string }): string {
+  return typeof ref === 'string' ? ref : ref.id
+}
+
 export function clampToContainer(
   x: number,
   y: number,
-  halfWidth: number,
-  halfHeight: number,
   padding: number,
   width: number,
   height: number,
 ): { x: number; y: number } {
-  const marginX = halfWidth + padding
-  const marginY = halfHeight + padding
   return {
-    x: Math.min(Math.max(x, marginX), width - marginX),
-    y: Math.min(Math.max(y, marginY), height - marginY),
+    x: Math.min(Math.max(x, padding), width - padding),
+    y: Math.min(Math.max(y, padding), height - padding),
   }
 }
 

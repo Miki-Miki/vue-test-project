@@ -1,11 +1,16 @@
 import { shallowRef, onScopeDispose, watch } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import type { ForceCollide, ForceLink, Simulation } from 'd3-force'
-import { clampToContainer, createForceSimulation } from './forceSimulationUtils'
+import { clampToContainer, createForceSimulation, linkEndpointId } from './forceSimulationUtils'
 import type { ForceLinkDatum, ForceNodeDatum } from './forceSimulationUtils'
-import { FORCE_BOUNDARY_PADDING, FORCE_DRAG_ALPHA_TARGET, FORCE_RESTART_ALPHA } from './forceSimulationConstants'
+import {
+  FORCE_BOUNDARY_PADDING,
+  FORCE_DRAG_ALPHA_TARGET,
+  FORCE_RESTART_ALPHA,
+} from './forceSimulationConstants'
 
 export type { ForceNodeDatum, ForceLinkDatum }
+export { linkEndpointId }
 
 export function useForceSimulation<T extends ForceNodeDatum>(
   nodes: ShallowRef<T[]>,
@@ -19,8 +24,6 @@ export function useForceSimulation<T extends ForceNodeDatum>(
     const clamped = clampToContainer(
       node.x ?? 0,
       node.y ?? 0,
-      node.width / 2,
-      node.height / 2,
       FORCE_BOUNDARY_PADDING,
       containerSize.value.width,
       containerSize.value.height,
@@ -70,8 +73,6 @@ export function useForceSimulation<T extends ForceNodeDatum>(
     const clamped = clampToContainer(
       x,
       y,
-      node.width / 2,
-      node.height / 2,
       FORCE_BOUNDARY_PADDING,
       containerSize.value.width,
       containerSize.value.height,

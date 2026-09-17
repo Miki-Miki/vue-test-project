@@ -1,6 +1,7 @@
 export const NODE_BASE_RADIUS = 80
 
-// must match the rendered card size in ResultsNode.scss — used only for the container boundary clamp, not collision
+// initial size for a freshly spawned result node, before its real box is measured and
+// reconciled via handleNodeResize (ResultsNode's height grows with its tag count)
 export const NODE_WIDTH = 150
 export const NODE_HEIGHT = 120
 

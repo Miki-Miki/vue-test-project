@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { SearchResult } from '@/types/search'
+import { useElementSize } from '@/composables/useElementSize'
 
 const MAX_VISIBLE_TAGS = 4
 
@@ -12,7 +13,15 @@ const props = defineProps<{
 const emit = defineEmits<{
   hoverChange: [hovering: boolean]
   dragStart: [event: PointerEvent]
+  resize: [size: { width: number; height: number }]
 }>()
+
+const rootRef = ref<HTMLElement | null>(null)
+const size = useElementSize(rootRef)
+watch(size, (s) => {
+  if (s.width === 0 && s.height === 0) return
+  emit('resize', s)
+})
 
 const uniqueTags = computed(() => {
   const tags = new Set<string>()
@@ -42,6 +51,7 @@ function handlePointerDown(event: PointerEvent) {
 
 <template>
   <div
+    ref="rootRef"
     class="results-node"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
