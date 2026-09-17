@@ -44,6 +44,30 @@ src/api/
 
 A directory that has no query-shaping helpers or static data to separate out (e.g. `taxonomy/`, which never calls anything) can skip the `Queries`/`Constants` split and just hold `*Utils.ts` files.
 
+## Composables structure (`src/composables/`)
+
+A composable that's just one file stays flat directly under `src/composables/` (e.g. `useSearchQuery.ts`, `useDetailPanel.ts`). Once a composable's domain needs a companion file — a `*Constants.ts` or `*Utils.ts` split out the same way `src/api/` splits by feature — group all of that domain's files into their own `src/composables/<domain>/` directory instead of leaving them flat and same-prefixed:
+
+```
+src/composables/
+├── useSearchQuery.ts          # single-file composable — no directory needed
+├── forceSimulation/
+│   ├── useForceSimulation.ts      # the composable — the only file other code should import from
+│   ├── forceSimulationUtils.ts    # pure functions the composable calls (no Vue reactivity)
+│   └── forceSimulationConstants.ts # static tuning values (forces, padding, alpha targets)
+├── nodeGraph/
+│   ├── useNodeGraph.ts         # generic canvas-node physics/interaction behavior
+│   └── nodeGraphConstants.ts
+└── searchResultGraph/
+    ├── useSearchResultGraph.ts     # domain composable built on nodeGraph/useNodeGraph
+    ├── searchResultGraphUtils.ts   # node types (GraphNode, ResultGraphNode, …), isResultNode, makeResultNode
+    └── searchResultGraphConstants.ts
+```
+
+- The directory name matches the composable's domain name (drop the `use` prefix), same as its main file's own prefix (`useNodeGraph.ts` → `nodeGraph/`).
+- A composable built on top of another lives in its own domain directory and imports the other by its full path (e.g. `searchResultGraph/useSearchResultGraph.ts` imports `../nodeGraph/useNodeGraph`) — it does not get folded into the dependency's directory.
+- This mirrors the `src/api/` convention above; apply the same judgment call there does: split `Constants`/`Utils` out only once a file actually needs one, and only then does the domain earn its own directory.
+
 ## Discogs API feature work
 
 Before touching Discogs search, auth, or the results grid — `src/views/SearchView.vue`, `src/views/GridView.vue`, `src/stores/discogs.ts`, `src/composables/useDiscogsAuth.ts`, `src/composables/useSearchQuery.ts`, `src/utils/searchCommand.ts`, `src/api/discogs/`, or `plugins/discogs-oauth.ts` — read [docs/discogs-api.md](docs/discogs-api.md) first. It covers the API base URL, the User-Agent proxy workaround, rate limits, the OAuth 1.0a flow, endpoints, and response schemas.

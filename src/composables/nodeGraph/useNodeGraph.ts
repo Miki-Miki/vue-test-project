@@ -1,7 +1,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import type { ShallowRef } from 'vue'
-import { useForceSimulation } from './useForceSimulation'
-import type { ForceLinkDatum, ForceNodeDatum } from './useForceSimulation'
+import { useForceSimulation } from '../forceSimulation/useForceSimulation'
+import type { ForceLinkDatum, ForceNodeDatum } from '../forceSimulation/useForceSimulation'
 import { CLICK_MOVEMENT_THRESHOLD, HOVER_RADIUS_MULTIPLIER } from './nodeGraphConstants'
 
 export interface BaseGraphNode extends ForceNodeDatum {

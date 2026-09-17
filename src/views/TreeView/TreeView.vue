@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useSearchHistoryStore } from '@/stores/searchHistory'
 import { useSearchSuggestions } from '@/composables/useSearchSuggestions'
 import { useSearchQuery } from '@/composables/useSearchQuery'
-import { useSearchResultGraph } from '@/composables/useSearchResultGraph'
+import { useSearchResultGraph } from '@/composables/searchResultGraph/useSearchResultGraph'
 import ResultsNode from '@/components/ResultsNode/ResultsNode.vue'
 import SuggestionNode from '@/components/SuggestionNode/SuggestionNode.vue'
 

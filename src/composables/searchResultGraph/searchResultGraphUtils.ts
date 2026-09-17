@@ -1,6 +1,6 @@
 import type { SearchResult, SearchSuggestion } from '@/types/search'
 import type { SearchQueryResult } from '@/stores/searchHistory'
-import type { BaseGraphNode } from './useNodeGraph'
+import type { BaseGraphNode } from '../nodeGraph/useNodeGraph'
 import { NODE_BASE_RADIUS, NODE_HEIGHT, NODE_SPAWN_JITTER_Y, NODE_SPAWN_OFFSET_X, NODE_WIDTH } from './searchResultGraphConstants'
 
 export interface ResultGraphNode extends BaseGraphNode {
